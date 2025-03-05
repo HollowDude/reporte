@@ -10,7 +10,7 @@ class Reporte(models.Model):
     apellidos = models.CharField(max_length=100)
     carnet = models.CharField(max_length=50)
     direccion = models.TextField()
-    email = models.EmailField()
+    email = models.EmailField(null=True, blank=True)
     telefono = models.CharField(max_length=20)
     fecha_armado = models.DateField()
     fecha_entregado = models.DateField()
