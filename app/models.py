@@ -1,3 +1,4 @@
+from email.policy import default
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
@@ -15,6 +16,7 @@ class Reporte(models.Model):
     fecha_armado = models.DateField()
     fecha_entregado = models.DateField()
     extensor_rango = models.CharField(max_length=255, unique=True)
+    sello = models.CharField(max_length=255, default="NONE")
     numero_reporte = models.IntegerField(editable=False, unique=True)
 
     def __str__(self):
