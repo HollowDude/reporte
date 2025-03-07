@@ -9,7 +9,7 @@ class Reporte(models.Model):
     vin = models.CharField(max_length=255, primary_key=True)  
     nombre = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
-    carnet = models.CharField(max_length=50)
+    carnet = models.CharField("Carnet/NIT", max_length=50)
     direccion = models.TextField()
     email = models.EmailField(blank=True)
     telefono = models.CharField(max_length=20)
