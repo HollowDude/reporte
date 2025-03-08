@@ -38,11 +38,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'rAzxSEZnHfrcenzZkHzVutIPRlAQcUcI',
-        'HOST': 'hopper.proxy.rlwy.net',
-        'PORT': '24462',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -142,5 +142,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'madafakn@gmail.com'
-EMAIL_HOST_PASSWORD = 'dfyo kwaw kfma yyvt '
+EMAIL_HOST_PASSWORD = os.getenv('MAIL_PASS')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
