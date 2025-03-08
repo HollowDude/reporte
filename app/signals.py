@@ -1,0 +1,15 @@
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
+from .models import Registro_Clientes
+
+@receiver(post_save, sender=Registro_Clientes)
+def enviar_notificacion_email(sender, instance, **kwargs):
+    # Si 'llamada' es True y antes no lo era, enviar correo
+    if instance.llamada:
+        subject = "Notificación de Cliente Contactado"
+        message = f"El cliente {instance.nombre} {instance.apellidos} (VIN: {instance.vin}) ha sido contactado."
+        recipient_list = ["raulv@estudiantes.uci.cu"]  # Cambia esto al correo de destino
+
+        send_mail(subject, message, None, recipient_list)
+        print(f"Correo enviado a {recipient_list} sobre {instance.vin}")
