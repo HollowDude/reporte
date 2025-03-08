@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import Reporte, Garantia
+from .models import Registro_Clientes, Garantia
 
-@admin.register(Reporte)
-class ReporteAdmin(admin.ModelAdmin):
+@admin.register(Registro_Clientes)
+class Registro_ClientesAdmin(admin.ModelAdmin):
     list_display = ('vin', 'nombre', 'apellidos', 'email', 'telefono', 'fecha_armado', 'fecha_entregado','extensor_rango', 'sello', 'numero_reporte')
     search_fields = ('vin', 'nombre', 'apellidos', 'email', 'telefono')
     list_filter = ('fecha_armado', 'fecha_entregado')
