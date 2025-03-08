@@ -1,12 +1,17 @@
 from django.contrib import admin
-from .models import Registro_Clientes, Garantia, Registro_Clientes_Pendientes
+from .models import Registro_Clientes, Garantia, Registro_Clientes_Pendientes, Registro_Empresa, Registro_Empresa_Pendientes
 
 @admin.register(Registro_Clientes)
 class Registro_ClientesAdmin(admin.ModelAdmin):
-    list_display = ('vin', 'nombre', 'apellidos', 'email', 'telefono', 'fecha_armado', 'fecha_entregado','extensor_rango', 'sello', 'numero_reporte')
+    list_display = ('vin', 'nombre', 'apellidos', 'email', 'telefono', 'fecha_armado', 'fecha_entregado','extensor_rango', 'sello', 'numero_reporte', 'llamada')
     search_fields = ('vin', 'nombre', 'apellidos', 'email', 'telefono')
     list_filter = ('fecha_armado', 'fecha_entregado')
     ordering = ('-numero_reporte',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ['llamada']
+        return [] 
 
 @admin.register(Registro_Clientes_Pendientes)
 class Registro_Clientes_PendientesAdmin(admin.ModelAdmin):
@@ -14,6 +19,41 @@ class Registro_Clientes_PendientesAdmin(admin.ModelAdmin):
     search_fields = ('vin', 'nombre', 'apellidos', 'email', 'telefono')
     list_filter = ('fecha_armado', 'fecha_entregado')
     ordering = ('-numero_reporte',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ['autorizado']
+        return [] 
+
+
+
+@admin.register(Registro_Empresa)
+class Registro_EmpresaAdmin(admin.ModelAdmin):
+    list_display = ('vin', 'nombre_empresa', 'email', 'telefono', 'fecha_armado', 'fecha_entregado','extensor_rango', 'sello', 'articulo', 'numero_reporte', 'llamada')
+    search_fields = ('vin', 'nombre_empresa', 'email', 'telefono', 'articulo')
+    list_filter = ('fecha_armado', 'fecha_entregado')
+    ordering = ('-numero_reporte',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ['llamada']
+        return [] 
+
+
+
+@admin.register(Registro_Empresa_Pendientes)
+class Registro_Empresa_PendientesAdmin(admin.ModelAdmin):
+    list_display = ('vin', 'nombre_empresa', 'email', 'telefono', 'fecha_armado', 'fecha_entregado','extensor_rango', 'sello', 'articulo', 'numero_reporte', 'autorizado')
+    search_fields = ('vin', 'nombre_empresa', 'email', 'telefono')
+    list_filter = ('fecha_armado', 'fecha_entregado')
+    ordering = ('-numero_reporte',)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ['autorizado']
+        return [] 
+
+
 
 @admin.register(Garantia)
 class GarantiaAdmin(admin.ModelAdmin):
