@@ -1,22 +1,24 @@
+from datetime import datetime
 from email.policy import default
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from psycopg2 import Date
 
 # Create your models here.
 class Registro_Clientes(models.Model):
 
     vin = models.CharField(max_length=255, primary_key=True)  
-    nombre = models.CharField(max_length=100)
-    apellidos = models.CharField(max_length=100)
-    carnet = models.CharField("Carnet/NIT", max_length=50)
-    direccion = models.TextField()
+    nombre = models.CharField(max_length=100, blank=True)
+    apellidos = models.CharField(max_length=100, blank=True)
+    carnet = models.CharField("Carnet/NIT", max_length=50, blank=True)
+    direccion = models.TextField(blank=True)
     email = models.EmailField(blank=True)
-    telefono = models.CharField(max_length=20)
-    fecha_armado = models.DateField()
-    fecha_entregado = models.DateField()
-    extensor_rango = models.CharField(max_length=255, unique=True)
-    sello = models.CharField(max_length=255, default="NONE")
+    telefono = models.CharField(max_length=20, blank=True)
+    fecha_armado = models.DateField(default=datetime.now)
+    fecha_entregado = models.DateField(default=datetime.now)
+    extensor_rango = models.CharField(max_length=255, unique=True, blank=True)
+    sello = models.CharField(max_length=255, default="NONE", blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
     llamada = models.BooleanField(default=False)
 
@@ -40,7 +42,7 @@ class Registro_Clientes_Pendientes(models.Model):
     email = models.EmailField(blank=True)
     telefono = models.CharField(max_length=20, blank=True)
     fecha_armado = models.DateField()
-    fecha_entregado = models.DateField(blank=True)
+    fecha_entregado = models.DateField(blank=True, default=datetime.now)
     extensor_rango = models.CharField(max_length=255, unique=True, blank=True)
     sello = models.CharField(max_length=255, blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
@@ -48,6 +50,12 @@ class Registro_Clientes_Pendientes(models.Model):
 
     def __str__(self):
         return f"{self.numero_reporte} - {self.vin}"
+
+@receiver(pre_save, sender=Registro_Clientes_Pendientes)
+def set_numero_reporte(sender, instance, **kwargs):
+    if not instance.numero_reporte:
+        last_reporte = Registro_Clientes_Pendientes.objects.order_by('-numero_reporte').first()
+        instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
 
 class Garantia(models.Model):
     usuario = models.ForeignKey(Registro_Clientes, on_delete=models.CASCADE)
