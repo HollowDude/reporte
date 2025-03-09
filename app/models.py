@@ -54,7 +54,7 @@ class Registro_Clientes_Pendientes(models.Model):
 @receiver(pre_save, sender=Registro_Clientes_Pendientes)
 def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
-        last_reporte = Registro_Clientes_Pendientes.objects.order_by('-numero_reporte').first()
+        last_reporte = Registro_Clientes.objects.order_by('-numero_reporte').first()
         instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
 
 class Garantia(models.Model):
