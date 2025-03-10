@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from .models import Registro_Clientes, Garantia, Registro_Clientes_Pendientes, Registro_Empresa, Registro_Empresa_Pendientes
 
@@ -41,6 +42,7 @@ class Registro_EmpresaAdmin(admin.ModelAdmin):
 
 
 
+
 @admin.register(Registro_Empresa_Pendientes)
 class Registro_Empresa_PendientesAdmin(admin.ModelAdmin):
     list_display = ('vin', 'nombre_empresa', 'email', 'telefono', 'fecha_armado', 'fecha_entregado','extensor_rango', 'sello', 'articulo', 'numero_reporte', 'autorizado')
@@ -52,6 +54,7 @@ class Registro_Empresa_PendientesAdmin(admin.ModelAdmin):
         if obj is None:
             return ['autorizado']
         return [] 
+
 
 
 
