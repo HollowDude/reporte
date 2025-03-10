@@ -100,7 +100,7 @@ class Registro_Empresa_Pendientes(models.Model):
     sello = models.CharField(max_length=255, blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
     articulo = models.CharField(max_length = 20, choices=VALUES, default='Triciclo')
-    autorizado = models.BooleanField(default=False, editable = False)
+    autorizado = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.numero_reporte} - {self.vin}"
