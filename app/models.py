@@ -1,9 +1,15 @@
 from datetime import datetime
 from email.policy import default
+from random import choice
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from psycopg2 import Date
+
+VALUES = [
+        ('power station', 'Power Station'),
+        ('triciclo', 'Triciclo')
+    ]
 
 # Create your models here.
 class Registro_Clientes(models.Model):
@@ -17,7 +23,7 @@ class Registro_Clientes(models.Model):
     telefono = models.CharField(max_length=20, blank=True)
     fecha_armado = models.DateField(default=datetime.now)
     fecha_entregado = models.DateField(default=datetime.now)
-    extensor_rango = models.CharField(max_length=255, unique=True, blank=True)
+    extensor_rango = models.CharField(max_length=255, blank=True)
     sello = models.CharField(max_length=255, default="NONE", blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
     llamada = models.BooleanField(default=False)
@@ -56,6 +62,57 @@ def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
         last_reporte = Registro_Clientes.objects.order_by('-numero_reporte').first()
         instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
+
+class Registro_Empresa(models.Model):
+
+    vin = models.CharField(max_length=255, primary_key=True)  
+    nombre_empresa = models.CharField(max_length=100, blank=True)
+    direccion = models.TextField(blank=True)
+    email = models.EmailField(blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
+    fecha_armado = models.DateField(default=datetime.now)
+    fecha_entregado = models.DateField(default=datetime.now)
+    extensor_rango = models.CharField(max_length=255, blank=True)
+    sello = models.CharField(max_length=255, default="NONE", blank=True)
+    articulo = models.CharField(max_length = 20, choices=VALUES, default='Triciclo')
+    numero_reporte = models.IntegerField(editable=False, unique=True)
+    llamada = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.numero_reporte} - {self.vin}"
+
+@receiver(pre_save, sender=Registro_Empresa)
+def set_numero_reporte(sender, instance, **kwargs):
+    if not instance.numero_reporte:
+        last_reporte = Registro_Empresa.objects.order_by('-numero_reporte').first()
+        instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
+
+class Registro_Empresa_Pendientes(models.Model):
+
+    vin = models.CharField(max_length=255, primary_key=True)  
+    nombre_empresa = models.CharField(max_length=100, blank=True)
+    direccion = models.TextField(blank=True)
+    email = models.EmailField(blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
+    fecha_armado = models.DateField()
+    fecha_entregado = models.DateField(blank=True, default=datetime.now)
+    extensor_rango = models.CharField(max_length=255, unique=True, blank=True)
+    sello = models.CharField(max_length=255, blank=True)
+    numero_reporte = models.IntegerField(editable=False, unique=True)
+    articulo = models.CharField(max_length = 20, choices=VALUES, default='Triciclo')
+    autorizado = models.BooleanField(default=False, editable = False)
+
+    def __str__(self):
+        return f"{self.numero_reporte} - {self.vin}"
+
+@receiver(pre_save, sender=Registro_Empresa_Pendientes)
+def set_numero_reporte(sender, instance, **kwargs):
+    if not instance.numero_reporte:
+        last_reporte = Registro_Empresa.objects.order_by('-numero_reporte').first()
+        instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
+
+
+
 
 class Garantia(models.Model):
     usuario = models.ForeignKey(Registro_Clientes, on_delete=models.CASCADE)
