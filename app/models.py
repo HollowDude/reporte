@@ -1,9 +1,11 @@
 from datetime import datetime
 from email.policy import default
 from random import choice
+import uuid
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.forms import ValidationError
 from psycopg2 import Date
 
 VALUES = [
@@ -65,7 +67,7 @@ def set_numero_reporte(sender, instance, **kwargs):
 
 class Registro_Empresa(models.Model):
 
-    vin = models.CharField(max_length=255, primary_key=True)  
+    vin = models.CharField("VIN-S/N", max_length=255, primary_key=True)
     nombre_empresa = models.CharField(max_length=100, blank=True)
     direccion = models.TextField(blank=True)
     email = models.EmailField(blank=True)
@@ -89,7 +91,7 @@ def set_numero_reporte(sender, instance, **kwargs):
 
 class Registro_Empresa_Pendientes(models.Model):
 
-    vin = models.CharField(max_length=255, primary_key=True)  
+    vin = models.CharField("VIN-S/N", max_length=255, primary_key=True)
     nombre_empresa = models.CharField(max_length=100, blank=True)
     direccion = models.TextField(blank=True)
     email = models.EmailField(blank=True)
