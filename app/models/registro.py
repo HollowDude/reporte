@@ -11,7 +11,6 @@ from .empresa import Empresa
 
 class Registro(models.Model):
 
-    fecha_armado = models.DateField(default=datetime.now)
     fecha_entregado = models.DateField(blank=True, null=True)
     extensor_rango = models.CharField(max_length=255, blank=True)
     sello = models.CharField(max_length=255, default="NONE", blank=True)
@@ -34,7 +33,6 @@ def set_numero_reporte(sender, instance, **kwargs):
 
 class Registro_Pendiente(models.Model):
 
-    fecha_armado = models.DateField()
     fecha_entregado = models.DateField(blank=True, null=True)
     extensor_rango = models.CharField(max_length=255, blank=True)
     sello = models.CharField(max_length=255, default="NONE", blank=True)
