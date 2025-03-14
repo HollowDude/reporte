@@ -26,16 +26,16 @@ class ClienteAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'apellidos', 'carnet', 'direccion', 'email', 'telefono')
 
 @admin.register(empresa.Empresa)
-class ClienteAdmin(admin.ModelAdmin):
+class EmpresaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'direccion', 'email', 'telefono')
 
 @admin.register(triciclo.Triciclo)
-class ClienteAdmin(admin.ModelAdmin):
-    redondl = ["vin"]
+class TricicloAdmin(admin.ModelAdmin):
+    list_display = ["vin", "fecha_armado"]
 
 @admin.register(power_station.Power_Station)
-class ClienteAdmin(admin.ModelAdmin):
-    list_display = ["sn"]
+class PowerAdmin(admin.ModelAdmin):
+    list_display = ["sn", "fecha_armado"]
 
 
 @admin.register(registro.Registro)
@@ -43,9 +43,6 @@ class RegistroAdmin(admin.ModelAdmin):
     form = RegistroForm
     readonly_fields = ['numero_reporte']
     fieldsets = (
-        (None, {
-            'fields': ('fecha_armado', 'fecha_entregado')
-        }),
         ('Comprador', {
             'fields': (('cliente', 'empresa'),),
         }),
@@ -53,7 +50,7 @@ class RegistroAdmin(admin.ModelAdmin):
             'fields': (('triciclo', 'power_station'),),
         }),
         ('Otros', {
-            'fields': ('extensor_rango', 'sello', 'llamada'),
+            'fields': ('fecha_entregado', 'extensor_rango', 'sello', 'llamada'),
         }),
     )
 
@@ -67,9 +64,6 @@ class Registro_PendienteAdmin(admin.ModelAdmin):
     form = RegistroForm
     readonly_fields = ['numero_reporte']
     fieldsets = (
-        (None, {
-            'fields': ('fecha_armado', 'fecha_entregado')
-        }),
         ('Comprador', {
             'fields': (('cliente', 'empresa'),),
         }),
@@ -77,7 +71,7 @@ class Registro_PendienteAdmin(admin.ModelAdmin):
             'fields': (('triciclo', 'power_station'),),
         }),
         ('Otros', {
-            'fields': ('extensor_rango', 'sello', 'autorizado'),
+            'fields': ('fecha_entregado', 'extensor_rango', 'sello', 'autorizado'),
         }),
     )
 
