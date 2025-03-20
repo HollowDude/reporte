@@ -11,50 +11,31 @@ from .empresa import Empresa
 
 class Registro(models.Model):
 
-    fecha_entregado = models.DateField(default = date.today())
-    tiempoR = models.IntegerField("Tiempo Restante", default = 180, editable=False)
-    extensor_rango = models.CharField(max_length=255, blank=True)
+    fecha_entregado = models.DateField("Puesta en marcha",default = date.today())
+    tiempoR = models.IntegerField("Tiempo Restante", editable=False)
     sello = models.CharField(max_length=255, default="NONE", blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
-    llamada = models.BooleanField(default=False)
+    llamada = models.BooleanField("Reporte a Abraham por correo", default=False)
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
     triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
     power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return f"{self.numero_reporte} - {self.sello}"
+        return f"Relacion de venta: {self.numero_reporte} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station}"
 
     def save(self, *args, **kwargs):
 
         if not self.pk:
             dias_transcurridos = (date.today() - self.fecha_entregado).days
-            self.tiempoR = max(0, 180 - dias_transcurridos) 
+            self.tiempoR = max(0, 365 - dias_transcurridos) 
         super().save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = "Relacion de venta"
+        verbose_name_plural = "Relacion de ventas"
+
 @receiver(pre_save, sender=Registro)
-def set_numero_reporte(sender, instance, **kwargs):
-    if not instance.numero_reporte:
-        last_reporte = Registro.objects.order_by('-numero_reporte').first()
-        instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
-
-
-class Registro_Pendiente(models.Model):
-
-    fecha_entregado = models.DateField(blank=True, null=True)
-    extensor_rango = models.CharField(max_length=255, blank=True)
-    sello = models.CharField(max_length=255, default="NONE", blank=True)
-    numero_reporte = models.IntegerField(editable=False, unique=True)
-    autorizado = models.BooleanField(default=False)
-    cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
-    empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
-    triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
-    power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
-
-    def __str__(self):
-        return f"{self.numero_reporte} - {self.sello}"
-
-@receiver(pre_save, sender=Registro_Pendiente)
 def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
         last_reporte = Registro.objects.order_by('-numero_reporte').first()

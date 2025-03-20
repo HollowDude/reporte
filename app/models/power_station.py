@@ -6,4 +6,4 @@ class Power_Station(models.Model):
     fecha_armado = models.DateField(default=datetime.now)
 
     def __str__(self):
-        return f"{self.sn} - {self.fecha_armado}"
+        return f"Power Station: {self.sn}"
