@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db import models
+from django.forms import ValidationError
 
 class Triciclo(models.Model):
     vin = models.CharField("Vin", max_length=255, primary_key=True)
@@ -9,6 +10,11 @@ class Triciclo(models.Model):
 
     def __str__(self):
         return f"{self.vin} - {self.modelo}"
+
+    def clean(self):
+        super().clean() 
+        if len(self.vin) != 17:  
+            raise ValidationError({"vin": "El VIN debe tener exactamente 17 dígitos."})
 
 
 class Triciclo_Pendiente(models.Model):
@@ -20,3 +26,8 @@ class Triciclo_Pendiente(models.Model):
 
     def __str__(self):
         return f"{self.vin} - {self.modelo}"
+    
+    def clean(self):
+        super().clean()  
+        if len(self.vin) != 17:  
+            raise ValidationError({"vin": "El VIN debe tener exactamente 17 dígitos."})

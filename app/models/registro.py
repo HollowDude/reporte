@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
@@ -11,7 +11,8 @@ from .empresa import Empresa
 
 class Registro(models.Model):
 
-    fecha_entregado = models.DateField(blank=True, null=True)
+    fecha_entregado = models.DateField(default = date.today())
+    tiempoR = models.IntegerField("Tiempo Restante", default = 180, editable=False)
     extensor_rango = models.CharField(max_length=255, blank=True)
     sello = models.CharField(max_length=255, default="NONE", blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
@@ -22,7 +23,7 @@ class Registro(models.Model):
     power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return f"{self.numero_reporte}"
+        return f"{self.numero_reporte} - {self.sello}"
 
 @receiver(pre_save, sender=Registro)
 def set_numero_reporte(sender, instance, **kwargs):
@@ -44,7 +45,7 @@ class Registro_Pendiente(models.Model):
     power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return f"{self.numero_reporte}"
+        return f"{self.numero_reporte} - {self.sello}"
 
 @receiver(pre_save, sender=Registro_Pendiente)
 def set_numero_reporte(sender, instance, **kwargs):

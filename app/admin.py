@@ -59,7 +59,7 @@ class RegistroAdmin(admin.ModelAdmin):
             'fields': (('triciclo', 'power_station'),),
         }),
         ('Otros', {
-            'fields': ('fecha_entregado', 'extensor_rango', 'sello', 'llamada'),
+            'fields': ('fecha_entregado', 'tiempoR', 'extensor_rango', 'sello', 'llamada'),
         }),
     )
 
