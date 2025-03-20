@@ -31,11 +31,11 @@ class EmpresaAdmin(admin.ModelAdmin):
 
 @admin.register(triciclo.Triciclo)
 class TricicloAdmin(admin.ModelAdmin):
-    list_display = ["vin", "fecha_armado", "num_m", "modelo"]
+    list_display = ["vin", "fecha_armado", "num_m", "extensor_rango"]
 
 @admin.register(triciclo.Triciclo_Pendiente)
 class TricicloPendienteAdmin(admin.ModelAdmin):
-    list_display = ["vin", "fecha_armado", "modelo", "num_m", "autorizado"]
+    list_display = ["vin", "fecha_armado", "num_m", "extensor_rango", "autorizado"]
 
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
@@ -59,7 +59,7 @@ class RegistroAdmin(admin.ModelAdmin):
             'fields': (('triciclo', 'power_station'),),
         }),
         ('Otros', {
-            'fields': ('fecha_entregado', 'extensor_rango', 'sello', 'llamada', 'numero_reporte', 'tiempoR'),
+            'fields': ('fecha_entregado', 'sello', 'llamada', 'numero_reporte', 'tiempoR'),
         }),
     )
 
@@ -73,14 +73,12 @@ class RegistroAdmin(admin.ModelAdmin):
         obj_id = request.resolver_match.kwargs.get('object_id')
         
         if db_field.name == "triciclo":
-            # Excluir triciclos usados en otros registros (excepto el actual)
             excluded_vins = registro.Registro.objects.exclude(pk=obj_id) \
                                                     .exclude(triciclo__isnull=True) \
                                                     .values_list('triciclo__vin', flat=True)
             kwargs["queryset"] = triciclo.Triciclo.objects.exclude(vin__in=excluded_vins)
 
         elif db_field.name == "power_station":
-            # Excluir power stations usadas en otros registros (excepto el actual)
             excluded_sns = registro.Registro.objects.exclude(pk=obj_id) \
                                                   .exclude(power_station__isnull=True) \
                                                   .values_list('power_station__sn', flat=True)
@@ -88,47 +86,6 @@ class RegistroAdmin(admin.ModelAdmin):
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
-@admin.register(registro.Registro_Pendiente)
-class Registro_PendienteAdmin(admin.ModelAdmin):
-    form = RegistroForm
-    readonly_fields = ['numero_reporte']
-    fieldsets = (
-        ('Comprador', {
-            'fields': (('cliente', 'empresa'),),
-        }),
-        ('Producto', {
-            'fields': (('triciclo', 'power_station'),),
-        }),
-        ('Otros', {
-            'fields': ('fecha_entregado', 'extensor_rango', 'sello', 'autorizado'),
-        }),
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj is None:
-            return ['autorizado']
-        return [] 
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        obj_id = request.resolver_match.kwargs.get('object_id')
-        
-        if db_field.name == "triciclo":
-            # Excluir triciclos usados en otros registros (excepto el actual)
-            excluded_vins = registro.Registro.objects.exclude(pk=obj_id) \
-                                                    .exclude(triciclo__isnull=True) \
-                                                    .values_list('triciclo__vin', flat=True)
-            kwargs["queryset"] = triciclo.Triciclo.objects.exclude(vin__in=excluded_vins)
-
-        elif db_field.name == "power_station":
-            # Excluir power stations usadas en otros registros (excepto el actual)
-            excluded_sns = registro.Registro.objects.exclude(pk=obj_id) \
-                                                  .exclude(power_station__isnull=True) \
-                                                  .values_list('power_station__sn', flat=True)
-            kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
 @admin.register(garantia.Garantia)
 class GarantiaAdmin(admin.ModelAdmin):
     list_display = ('get_usuario_nombre_completo', 'get_usuario_dir', 'get_usuario_tell', 'vin', 'modelo', 'motor_num', 'fecha_fabr', 'peso', 'voltaje', 'potencia', 'motivo', 'evaluacion', 'trabajos_hechos', 'piezas_usadas', 'recomendaciones', 'nombre_especialista', 'conformidad_cliente', 'facturar_a')
@@ -149,5 +106,3 @@ class GarantiaAdmin(admin.ModelAdmin):
     get_usuario_tell.short_description = "Usuario telefono"
     get_usuario_nombre_completo.short_description = 'Nombre del usuario' 
 
-
-# Register your models here.
