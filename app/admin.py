@@ -31,7 +31,16 @@ class EmpresaAdmin(admin.ModelAdmin):
 
 @admin.register(triciclo.Triciclo)
 class TricicloAdmin(admin.ModelAdmin):
-    list_display = ["vin", "fecha_armado"]
+    list_display = ["vin", "fecha_armado", "num_m", "modelo"]
+
+@admin.register(triciclo.Triciclo_Pendiente)
+class TricicloPendienteAdmin(admin.ModelAdmin):
+    list_display = ["vin", "fecha_armado", "modelo", "num_m", "autorizado"]
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ['autorizado']
+        return [] 
 
 @admin.register(power_station.Power_Station)
 class PowerAdmin(admin.ModelAdmin):
@@ -58,6 +67,19 @@ class RegistroAdmin(admin.ModelAdmin):
         if obj is None:
             return ['llamada']
         return [] 
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "triciclo":
+            # Excluir triciclos que ya están en algún registro
+            kwargs["queryset"] = triciclo.Triciclo.objects.exclude(
+                id__in=registro.Registro.objects.values('triciclo_id')
+            )
+        elif db_field.name == "power_station":
+            # Excluir power stations que ya están en algún registro
+            kwargs["queryset"] = power_station.Power_Station.objects.exclude(
+                id__in=registro.Registro.objects.values('power_station_id')
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(registro.Registro_Pendiente)
 class Registro_PendienteAdmin(admin.ModelAdmin):
