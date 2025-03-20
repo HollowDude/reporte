@@ -109,6 +109,25 @@ class Registro_PendienteAdmin(admin.ModelAdmin):
             return ['autorizado']
         return [] 
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        obj_id = request.resolver_match.kwargs.get('object_id')
+        
+        if db_field.name == "triciclo":
+            # Excluir triciclos usados en otros registros (excepto el actual)
+            excluded_vins = registro.Registro.objects.exclude(pk=obj_id) \
+                                                    .exclude(triciclo__isnull=True) \
+                                                    .values_list('triciclo__vin', flat=True)
+            kwargs["queryset"] = triciclo.Triciclo.objects.exclude(vin__in=excluded_vins)
+
+        elif db_field.name == "power_station":
+            # Excluir power stations usadas en otros registros (excepto el actual)
+            excluded_sns = registro.Registro.objects.exclude(pk=obj_id) \
+                                                  .exclude(power_station__isnull=True) \
+                                                  .values_list('power_station__sn', flat=True)
+            kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(garantia.Garantia)
 class GarantiaAdmin(admin.ModelAdmin):
