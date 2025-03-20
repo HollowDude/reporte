@@ -25,6 +25,13 @@ class Registro(models.Model):
     def __str__(self):
         return f"{self.numero_reporte} - {self.sello}"
 
+    def save(self, *args, **kwargs):
+
+        if not self.pk:
+            dias_transcurridos = (date.today() - self.fecha_entregado).days
+            self.tiempoR = max(0, 180 - dias_transcurridos) 
+        super().save(*args, **kwargs)
+
 @receiver(pre_save, sender=Registro)
 def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
