@@ -1,0 +1,1 @@
+from app.api.viewsets.clienteViewSet import Cliente
