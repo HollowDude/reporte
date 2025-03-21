@@ -15,7 +15,7 @@ class Registro(models.Model):
     tiempoR = models.IntegerField("Tiempo Restante", editable=False)
     sello = models.CharField(max_length=255, default="NONE", blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
-    llamada = models.BooleanField("Reporte a Abraham por correo", default=False)
+    llamada = models.BooleanField("Reporte de reclamacion", default=False)
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
     triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
