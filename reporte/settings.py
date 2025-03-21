@@ -39,11 +39,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'reg',
+        'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': '2502666',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'PASSWORD': 'rAzxSEZnHfrcenzZkHzVutIPRlAQcUcI',
+        'HOST': 'hopper.proxy.rlwy.net',
+        'PORT': '24462',
     },
 }
 
