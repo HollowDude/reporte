@@ -6,10 +6,9 @@ from .models import registro
 @receiver(post_save, sender=registro.Registro)
 def enviar_notificacion_email(sender, instance, **kwargs):
     # Si 'llamada' es True y antes no lo era, enviar correo
-    if instance.llamada:
+    if instance.llamada != '':
         subject = "Notificación de Cliente Contactado"
-        message = f"El cliente {instance.cliente} ha sido contactado."
+        message = f"El cliente {instance.cliente} ha sido reportado, motivo: {instance.llamada}."
         recipient_list = ["raulv@estudiantes.uci.cu"]  # Cambia esto al correo de destino
 
         send_mail(subject, message, None, recipient_list)
-        print(f"Correo enviado a {recipient_list}")

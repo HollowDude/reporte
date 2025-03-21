@@ -1,6 +1,45 @@
 from django import forms
 from django.contrib import admin
 from .models import registro, garantia, cliente, empresa, triciclo, power_station
+from django.contrib.auth.models import User, Group
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+
+
+
+class MiAdminSite(admin.AdminSite):
+    def get_app_list(self, request):
+        app_list = super().get_app_list(request)
+        # Define el orden deseado de las aplicaciones y modelos
+        orden_aplicaciones = [
+            {'name': 'Registro', 'models': [
+                {'name': 'Registro', 'admin_url': '/admin/app/registro'},
+                {'name': 'Garantia', 'admin_url': '/admin/app/garantia/'},
+            ]},
+            {'name': 'Cliente', 'models': [
+                {'name': 'Cliente', 'admin_url': '/admin/app/cliente/'},
+            ]},
+            {'name': 'Empresa', 'models': [
+                {'name': 'Empresa', 'admin_url': '/admin/app/empresa/'},
+            ]},
+            {'name': 'Triciclo', 'models': [
+                {'name': 'Triciclo', 'admin_url': '/admin/app/triciclo/'},
+            ]},
+            {'name': 'Power Station', 'models': [
+                {'name': 'Power Station', 'admin_url': '/admin/app/power_station/'},
+            ]},
+            {'name': 'Autenticación y Autorización', 'models': [
+                {'name': 'Usuarios', 'admin_url': '/admin/auth/user/'},
+                {'name': 'Grupos', 'admin_url': '/admin/auth/group/'},
+            ]},
+        ]
+        return orden_aplicaciones
+
+mi_admin_site = MiAdminSite(name='miadmin')
+mi_admin_site.site_header = 'Administración de Empresa'
+mi_admin_site.site_title = 'Administracion'
+mi_admin_site.index_title = 'Bienvenido al administrador de Empresa'
+mi_admin_site.register(User, UserAdmin)
+mi_admin_site.register(Group, GroupAdmin)
 
 
 class RegistroForm(forms.ModelForm):
@@ -21,33 +60,44 @@ class RegistroForm(forms.ModelForm):
             
         return cleaned_data
 
-@admin.register(cliente.Cliente)
+class GarantiaForm(forms.ModelForm):
+    class Meta:
+        model = garantia.Garantia
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Validación comprador
+        if bool(cleaned_data.get('cliente')) == bool(cleaned_data.get('empresa')):
+            raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
+            
+        # Validación producto
+        if bool(cleaned_data.get('triciclo')) == bool(cleaned_data.get('power_station')):
+            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station")
+            
+        return cleaned_data
+
+
+@admin.register(cliente.Cliente, site=mi_admin_site)
 class ClienteAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'apellidos', 'carnet', 'direccion', 'email', 'telefono')
 
-@admin.register(empresa.Empresa)
+@admin.register(empresa.Empresa, site=mi_admin_site)
 class EmpresaAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'direccion', 'email', 'telefono')
+    list_display = ('nombre', 'nit', 'direccion', 'email', 'telefono')
 
-@admin.register(triciclo.Triciclo)
+@admin.register(triciclo.Triciclo, site=mi_admin_site)
 class TricicloAdmin(admin.ModelAdmin):
-    list_display = ["vin", "fecha_armado", "num_m", "extensor_rango"]
+    list_display = ["vin", "fecha_armado", "num_m", "extensor_rango", "sello", "fecha_autorizado", "autorizado"]
+    search_fields = ('autorizado', 'fecha_autorizado')
 
-@admin.register(triciclo.Triciclo_Pendiente)
-class TricicloPendienteAdmin(admin.ModelAdmin):
-    list_display = ["vin", "fecha_armado", "num_m", "extensor_rango", "autorizado"]
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj is None:
-            return ['autorizado']
-        return [] 
-
-@admin.register(power_station.Power_Station)
+@admin.register(power_station.Power_Station, site=mi_admin_site)
 class PowerAdmin(admin.ModelAdmin):
     list_display = ["sn", "fecha_armado"]
 
 
-@admin.register(registro.Registro)
+@admin.register(registro.Registro, site=mi_admin_site)
 class RegistroAdmin(admin.ModelAdmin):
     form = RegistroForm
     readonly_fields = ['numero_reporte', 'tiempoR']
@@ -59,14 +109,17 @@ class RegistroAdmin(admin.ModelAdmin):
             'fields': (('triciclo', 'power_station'),),
         }),
         ('Otros', {
-            'fields': ('fecha_entregado', 'sello', 'llamada', 'numero_reporte', 'tiempoR'),
+            'fields': ('fecha_entregado', 'llamada', 'numero_reporte', 'tiempoR'),
         }),
     )
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj: 
-            readonly_fields.extend(['numero_reporte', 'tiempoR'])
+        if not obj:  # Creando
+            readonly_fields.extend(['llamada'])
+        else:  # Editando
+            if obj.llamada:
+                readonly_fields.append('llamada')
         return readonly_fields
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -86,23 +139,19 @@ class RegistroAdmin(admin.ModelAdmin):
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
-@admin.register(garantia.Garantia)
+@admin.register(garantia.Garantia, site=mi_admin_site)
 class GarantiaAdmin(admin.ModelAdmin):
-    list_display = ('get_usuario_nombre_completo', 'get_usuario_dir', 'get_usuario_tell', 'vin', 'modelo', 'motor_num', 'fecha_fabr', 'peso', 'voltaje', 'potencia', 'motivo', 'evaluacion', 'trabajos_hechos', 'piezas_usadas', 'recomendaciones', 'nombre_especialista', 'conformidad_cliente', 'facturar_a')
-    search_fields = ('get_usuario_nombre_completo', 'get_usuario_tell', 'evaluacion', 'nombre_especialista', 'facturar_a')
-    ordering = ('-fecha_fabr',)
+    form = GarantiaForm
+    fieldsets = (
+        ('Remitente', {
+            'fields': (('cliente', 'empresa'),),
+        }),
+        ('Producto', {
+            'fields': (('triciclo', 'power_station'),),
+        }),
+        ('Otros', {
+            'fields': ('motivo', 'evaluacion', 'trabajos_hechos', 'piezas_usadas', 'recomendaciones', 'nombre_especialista', 'conformidad_cliente', 'facturar_a',),
+        })
+    )
 
-    @admin.display(empty_value="???")
-    def get_usuario_nombre_completo(self, obj):
-        return f"{obj.usuario.nombre} {obj.usuario.apellidos}"
-    @admin.display(empty_value="???")
-    def get_usuario_dir(self, obj):
-        return f"{obj.usuario.direccion}"
-    @admin.display(empty_value="???")
-    def get_usuario_tell(self, obj):
-        return f"{obj.usuario.telefono}"
-    
-    get_usuario_dir.short_description = "Usuario direccion"
-    get_usuario_tell.short_description = "Usuario telefono"
-    get_usuario_nombre_completo.short_description = 'Nombre del usuario' 
 
