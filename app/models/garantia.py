@@ -37,3 +37,4 @@ class Garantia(models.Model):
     class Meta:
         verbose_name = "Reporte de Reclamacion"
         verbose_name_plural = "Reporte de Reclamaciones"
+
