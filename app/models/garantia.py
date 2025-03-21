@@ -1,7 +1,7 @@
 from django.db import models
 from .cliente import Cliente
 
-class Reporte_de_reclamacion(models.Model):
+class Garantia(models.Model):
     usuario = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     vin=models.CharField(max_length=255, primary_key=True)
     modelo = models.CharField(max_length=50)
