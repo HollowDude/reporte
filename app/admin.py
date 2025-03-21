@@ -9,23 +9,18 @@ from django.contrib.auth.admin import UserAdmin, GroupAdmin
 class MiAdminSite(admin.AdminSite):
     def get_app_list(self, request):
         app_list = super().get_app_list(request)
-        # Define el orden deseado de las aplicaciones y modelos
         orden_aplicaciones = [
-            {'name': 'Registro', 'models': [
-                {'name': 'Registro', 'admin_url': '/admin/app/registro'},
-                {'name': 'Garantia', 'admin_url': '/admin/app/garantia/'},
+            {'name': 'Registros', 'models': [
+                {'name': 'Relacion de ventas', 'admin_url': '/admin/app/registro'},
+                {'name': 'Reporte de Reclamaciones', 'admin_url': '/admin/app/garantia/'},
             ]},
-            {'name': 'Cliente', 'models': [
-                {'name': 'Cliente', 'admin_url': '/admin/app/cliente/'},
+            {'name': 'Clientes', 'models': [
+                {'name': 'Registros de T.C.P/P.N', 'admin_url': '/admin/app/cliente/'},
+                {'name': 'Registros de MIPYME', 'admin_url': '/admin/app/empresa/'},
             ]},
-            {'name': 'Empresa', 'models': [
-                {'name': 'Empresa', 'admin_url': '/admin/app/empresa/'},
-            ]},
-            {'name': 'Triciclo', 'models': [
-                {'name': 'Triciclo', 'admin_url': '/admin/app/triciclo/'},
-            ]},
-            {'name': 'Power Station', 'models': [
-                {'name': 'Power Station', 'admin_url': '/admin/app/power_station/'},
+            {'name': 'Ventas', 'models': [
+                {'name': 'Triciclos Armados', 'admin_url': '/admin/app/triciclo/'},
+                {'name': 'Power Station', 'admin_url': '/admin/app/power_station/'}
             ]},
             {'name': 'Autenticación y Autorización', 'models': [
                 {'name': 'Usuarios', 'admin_url': '/admin/auth/user/'},
@@ -68,11 +63,9 @@ class GarantiaForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         
-        # Validación comprador
         if bool(cleaned_data.get('cliente')) == bool(cleaned_data.get('empresa')):
             raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
             
-        # Validación producto
         if bool(cleaned_data.get('triciclo')) == bool(cleaned_data.get('power_station')):
             raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station")
             
