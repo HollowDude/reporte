@@ -1,20 +1,40 @@
 from django.db import models
 from .cliente import Cliente
+from.empresa import Empresa
+from .triciclo import Triciclo
+from .power_station import Power_Station
+ESPEC = [
+    ("abraham pino valdes", "Abraham Pino Valdes"),
+    ("juan", "Juan"),
+    ("jose", "Jose"),
+    ("ailet", "Ailet"),
+    ("tamara", "Tamara"),
+    ("dago", "Dago"),
+    ("roberto", "Roberto"),
+]
 
+FACT = [
+    ("cliente", "Cliente"),
+    ("vendedor", "Vendedor"),
+]
 class Garantia(models.Model):
-    usuario = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    vin=models.CharField(max_length=255, primary_key=True)
-    modelo = models.CharField(max_length=50)
-    motor_num=models.CharField(max_length=255)
-    fecha_fabr= models.DateField()
-    peso=models.FloatField()
-    voltaje=models.IntegerField()
-    potencia=models.FloatField()
-    motivo=models.TextField()
-    evaluacion=models.TextField()
-    trabajos_hechos=models.TextField()
-    piezas_usadas=models.TextField()
-    recomendaciones=models.TextField()
-    nombre_especialista=models.CharField(max_length=50)
-    conformidad_cliente=models.BooleanField()
-    facturar_a=models.CharField(default="Cliente")
+    cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
+    empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
+    triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
+    power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
+    motivo=models.TextField("Motivo", max_length=255)
+    evaluacion=models.TextField("Evaluacion resumen", max_length=255)
+    trabajos_hechos=models.TextField("Trabajos realizados", max_length=255)
+    piezas_usadas=models.TextField("Lista de piezas usadas", max_length=255)
+    recomendaciones=models.TextField("Algunas recomendaciones", max_length=255)
+    nombre_especialista=models.CharField("Especialista encargado", choices=ESPEC, max_length=255)
+    conformidad_cliente=models.BooleanField("Conformidad del cliente")
+    facturar_a=models.CharField("Facturar a", choices = FACT, max_length=255)
+
+    def __str__(self):
+        return f"Reporte de Recamacion: {self.empresa} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station}"
+
+    class Meta:
+        verbose_name = "Reporte de Reclamacion"
+        verbose_name_plural = "Reporte de Reclamaciones"
+

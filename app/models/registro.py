@@ -11,11 +11,10 @@ from .empresa import Empresa
 
 class Registro(models.Model):
 
-    fecha_entregado = models.DateField("Puesta en marcha",default = date.today())
+    fecha_entregado = models.DateField("Fecha entregado",default = date.today())
     tiempoR = models.IntegerField("Tiempo Restante", editable=False)
-    sello = models.CharField(max_length=255, default="NONE", blank=True)
     numero_reporte = models.IntegerField(editable=False, unique=True)
-    llamada = models.BooleanField("Reporte de reclamacion", default=False)
+    llamada = models.TextField("Reportar por correo(Especificar motivo)", blank = True)
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
     triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
@@ -40,3 +39,4 @@ def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
         last_reporte = Registro.objects.order_by('-numero_reporte').first()
         instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
+        

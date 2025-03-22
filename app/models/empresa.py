@@ -2,6 +2,7 @@ from django.db import models
 
 class Empresa(models.Model):
     nombre = models.CharField(max_length=100, blank=True)
+    nit = models.CharField("NIT",max_length = 255, blank = True)
     direccion = models.TextField(blank=True)
     email = models.EmailField(blank=True)
     telefono = models.CharField(max_length=20, blank=True)
