@@ -9,6 +9,6 @@ def enviar_notificacion_email(sender, instance, **kwargs):
     if instance.llamada != '':
         subject = "Notificación de Cliente Contactado"
         message = f"El cliente {instance.cliente} ha sido reportado, motivo: {instance.llamada}."
-        recipient_list = ["ailetmariacasalO@gmail.com"]  # Cambia esto al correo de destino
+        recipient_list = ["tallerjireh47@gmail.com"]  # Cambia esto al correo de destino
 
         send_mail(subject, message, None, recipient_list)
