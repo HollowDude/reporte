@@ -11,7 +11,12 @@ def enviar_notificacion_email(sender, instance, **kwargs):
         comprador_data = "\n".join([f"{key}: {value}" for key, value in comprador.__dict__.items() if not key.startswith('_')])
         
         # Obtener datos del producto
-        producto = instance.triciclo if instance.triciclo else instance.power_station
+        if instance.triciclo:
+            producto = instance.triciclo 
+        if  instance.power_station:
+            producto = instance.power_station
+        else:
+            producto = instance.panel 
         producto_data = "\n".join([f"{key}: {value}" for key, value in producto.__dict__.items() if not key.startswith('_')])
         
         # Construir mensaje
