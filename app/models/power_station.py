@@ -19,7 +19,7 @@ class Power_Station(models.Model):
     bases = models.IntegerField("Bases de Paneles", editable=False)
 
     def __str__(self):
-        return f"Power Station {self.sn} Tipo: {self.tipo}"
+        return f"ID: {self.sn} Tipo: {self.tipo}"
 
     def save(self, *args, **kwargs):
         tipo_mapping = {

@@ -6,15 +6,15 @@ from django.db.models.signals import pre_save
 
 class Triciclo(models.Model):
     vin = models.CharField("Vin", max_length=255, primary_key=True)
-    fecha_armado = models.DateField(default=datetime.now)
+    fecha_armado = models.DateField(default=datetime.now, help_text="Fecha en que se armo el triciclo")
     num_m = models.CharField("Numero de Motor", max_length = 255, blank=True)
     sello = models.CharField(max_length=255, default="NONE", blank=True)
     extensor_rango = models.CharField(max_length=255, blank=True)
-    fecha_autorizado = models.DateField(blank = True, null = True)
-    autorizado = models.BooleanField(default=False)
+    fecha_autorizado = models.DateField(blank = True, null = True, help_text="Aparecera automaticamente al autorizar el triciclo")
+    autorizado = models.BooleanField(default=False, help_text="El triciclo se autorizara solo por el encargado de ello")
 
     def __str__(self):
-        return f"Triciclo: {self.vin} - {self.extensor_rango}"
+        return f"VIN: {self.vin} - Extensor: {self.extensor_rango}"
 
     def clean(self):
         super().clean() 

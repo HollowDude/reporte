@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import registro, garantia, cliente, empresa, triciclo, power_station, panels
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.db import models
 
 
 
@@ -56,30 +57,44 @@ class RegistroForm(forms.ModelForm):
         cleaned_data = super().clean()
         
         # Validación comprador
-        if bool(cleaned_data.get('cliente')) == bool(cleaned_data.get('empresa')):
+        cliente = cleaned_data.get('cliente')
+        empresa = cleaned_data.get('empresa')
+        if (cliente and empresa) or (not cliente and not empresa):
             raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
             
         # Validación producto
-        if bool((cleaned_data.get('triciclo')) == bool(cleaned_data.get('power_station')) or (cleaned_data.get('panel')) == bool(cleaned_data.get('power_station')) or (cleaned_data.get('triciclo')) == bool(cleaned_data.get('panel'))):
-            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station o un Panel")
-            
+        triciclo = cleaned_data.get('triciclo')
+        power_station = cleaned_data.get('power_station')
+        panel = cleaned_data.get('panel')
+        
+        # Contar cuántos productos están seleccionados
+        count = sum([bool(triciclo), bool(power_station), bool(panel)])
+        
+        if count > 1:
+            raise forms.ValidationError("Selecciona solo un Triciclo, una Power Station o un Panel")
+        
         return cleaned_data
 
 class GarantiaForm(forms.ModelForm):
     class Meta:
         model = garantia.Garantia
         fields = '__all__'
+        help_texts = {
+            'triciclo': 'Guarde primero después de seleccionar cliente/empresa.',
+            'power_station': 'Guarde primero después de seleccionar cliente/empresa.',
+            'panel': 'Guarde primero después de seleccionar cliente/empresa.',
+        }
 
-    def clean(self):
-        cleaned_data = super().clean()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = getattr(self, 'instance', None)
         
-        if bool(cleaned_data.get('cliente')) == bool(cleaned_data.get('empresa')):
-            raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
-            
-        if bool(cleaned_data.get('triciclo')) == bool(cleaned_data.get('power_station')):
-            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station o Panel Solar")
-            
-        return cleaned_data
+        # Si es creación (no tiene PK), deshabilitar campos de producto
+        if not instance or not instance.pk:
+            for field in ['triciclo', 'power_station', 'panel']:
+                if field in self.fields:  # ¡Verificar si el campo existe!
+                    self.fields[field].disabled = True
+                    self.fields[field].help_text = "Guarde primero después de seleccionar cliente/empresa."
 
 
 @admin.register(cliente.Cliente, site=mi_admin_site)
@@ -88,7 +103,16 @@ class ClienteAdmin(admin.ModelAdmin):
 
 @admin.register(panels.Panels, site=mi_admin_site)
 class PanelsAdmin(admin.ModelAdmin):
-    list_display = ('kit', 'cuchilla', 'act')
+    list_display = ('kit', 'aut', 'cuchilla', 'act')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        
+        # Si está creando un registro
+        if not obj:
+            readonly_fields.extend(['aut'])
+        
+        return readonly_fields
 
 @admin.register(empresa.Empresa, site=mi_admin_site)
 class EmpresaAdmin(admin.ModelAdmin):
@@ -98,6 +122,15 @@ class EmpresaAdmin(admin.ModelAdmin):
 class TricicloAdmin(admin.ModelAdmin):
     list_display = ["vin", "fecha_armado", "num_m", "extensor_rango", "sello", "fecha_autorizado", "autorizado"]
     search_fields = ('autorizado', 'fecha_autorizado')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        
+        # Si está creando un registro
+        if not obj:
+            readonly_fields.extend(['autorizado']) 
+        
+        return readonly_fields
 
 @admin.register(power_station.Power_Station, site=mi_admin_site)
 class PowerAdmin(admin.ModelAdmin):
@@ -149,9 +182,9 @@ class RegistroAdmin(admin.ModelAdmin):
                                                   .values_list('power_station__sn', flat=True)
             kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
 
-        elif db_field.name == "panels":
+        elif db_field.name == "panel":  # Corregido de "panels" a "panel"
             excluded_id = registro.Registro.objects.exclude(pk=obj_id) \
-                                                  .exclude(panels__isnull=True) \
+                                                  .exclude(panel__isnull=True) \
                                                   .values_list('panel__id', flat=True)
             kwargs["queryset"] = panels.Panels.objects.exclude(id__in=excluded_id)
 
@@ -166,10 +199,39 @@ class GarantiaAdmin(admin.ModelAdmin):
         }),
         ('Producto', {
             'fields': (('triciclo', 'power_station', 'panel'),),
+            'description': "Seleccione un producto después de guardar y elegir cliente/empresa."  # Texto descriptivo
         }),
         ('Otros', {
             'fields': ('motivo', 'evaluacion', 'trabajos_hechos', 'piezas_usadas', 'recomendaciones', 'nombre_especialista', 'conformidad_cliente'),
         })
     )
 
+    def get_readonly_fields(self, request, obj=None):
+        return super().get_readonly_fields(request, obj)
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        obj_id = request.resolver_match.kwargs.get('object_id')
+        if not obj_id:  # Si es creación, no filtrar
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+        obj = self.get_object(request, obj_id)
+        if not obj or not (obj.cliente or obj.empresa):
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+        # Obtener registros de venta del cliente/empresa
+        registros = registro.Registro.objects.filter(
+            models.Q(cliente=obj.cliente) | models.Q(empresa=obj.empresa)
+        )
+
+        # Filtrar productos según registros de venta
+        if db_field.name == "triciclo":
+            triciclos_ids = registros.exclude(triciclo__isnull=True).values_list('triciclo_id', flat=True)
+            kwargs["queryset"] = triciclo.Triciclo.objects.filter(vin__in=triciclos_ids)
+        elif db_field.name == "power_station":
+            ps_ids = registros.exclude(power_station__isnull=True).values_list('power_station_id', flat=True)
+            kwargs["queryset"] = power_station.Power_Station.objects.filter(sn__in=ps_ids)
+        elif db_field.name == "panel":
+            panel_ids = registros.exclude(panel__isnull=True).values_list('panel_id', flat=True)
+            kwargs["queryset"] = panels.Panels.objects.filter(id__in=panel_ids)
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
