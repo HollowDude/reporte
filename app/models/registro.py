@@ -6,10 +6,15 @@ from .triciclo import Triciclo
 from .power_station import Power_Station
 from .cliente import Cliente
 from .empresa import Empresa
-
+from .panels import Panels
 
 
 class Registro(models.Model):
+    RECEPTOR_CHOICES = [
+            ('tallerjireh47@gmail.com', 'Todos'),
+            ('raulv@estudiantes.uci.cu', 'Xavier'),
+            ('elviram@estudiantes.uci.cu', 'Mary'),
+        ]
 
     fecha_entregado = models.DateField("Fecha entregado",default = date.today())
     tiempoR = models.IntegerField("Tiempo Restante", editable=False)
@@ -18,10 +23,17 @@ class Registro(models.Model):
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
     triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
+    panel = models.ForeignKey(Panels, null=True, blank=True, on_delete=models.SET_NULL)
     power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
+    receptor = models.CharField(
+        "Receptor(es) del correo",
+        max_length=255,
+        blank=True,
+        help_text="Selecciona uno o varios receptores"
+    )
 
     def __str__(self):
-        return f"Relacion de venta: {self.numero_reporte} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station}"
+        return f"Relacion de venta: {self.numero_reporte} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station} - {self.panel}"
 
     def save(self, *args, **kwargs):
 

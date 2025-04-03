@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from .models import registro, garantia, cliente, empresa, triciclo, power_station
+from .models import registro, garantia, cliente, empresa, triciclo, power_station, panels
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 
@@ -20,7 +20,8 @@ class MiAdminSite(admin.AdminSite):
             ]},
             {'name': 'Ventas', 'models': [
                 {'name': 'Triciclos Armados', 'admin_url': '/admin/app/triciclo/'},
-                {'name': 'Power Station', 'admin_url': '/admin/app/power_station/'}
+                {'name': 'Power Station', 'admin_url': '/admin/app/power_station/'},
+                {'name': 'Paneles Solares', 'admin_url': '/admin/app/panels/'}
             ]},
             {'name': 'Autenticación y Autorización', 'models': [
                 {'name': 'Usuarios', 'admin_url': '/admin/auth/user/'},
@@ -38,9 +39,18 @@ mi_admin_site.register(Group, GroupAdmin)
 
 
 class RegistroForm(forms.ModelForm):
+    receptor = forms.MultipleChoiceField(
+        choices=registro.Registro.RECEPTOR_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
     class Meta:
         model = registro.Registro
         fields = '__all__'
+
+    def clean_receptor(self):
+        data = self.cleaned_data['receptor']
+        return ','.join(data)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -50,8 +60,8 @@ class RegistroForm(forms.ModelForm):
             raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
             
         # Validación producto
-        if bool(cleaned_data.get('triciclo')) == bool(cleaned_data.get('power_station')):
-            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station")
+        if bool((cleaned_data.get('triciclo')) == bool(cleaned_data.get('power_station')) or (cleaned_data.get('panel')) == bool(cleaned_data.get('power_station')) or (cleaned_data.get('triciclo')) == bool(cleaned_data.get('panel'))):
+            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station o un Panel")
             
         return cleaned_data
 
@@ -67,7 +77,7 @@ class GarantiaForm(forms.ModelForm):
             raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
             
         if bool(cleaned_data.get('triciclo')) == bool(cleaned_data.get('power_station')):
-            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station")
+            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station o Panel Solar")
             
         return cleaned_data
 
@@ -75,6 +85,10 @@ class GarantiaForm(forms.ModelForm):
 @admin.register(cliente.Cliente, site=mi_admin_site)
 class ClienteAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'apellidos', 'carnet', 'direccion', 'email', 'telefono')
+
+@admin.register(panels.Panels, site=mi_admin_site)
+class PanelsAdmin(admin.ModelAdmin):
+    list_display = ('kit', 'cuchilla', 'act')
 
 @admin.register(empresa.Empresa, site=mi_admin_site)
 class EmpresaAdmin(admin.ModelAdmin):
@@ -87,7 +101,9 @@ class TricicloAdmin(admin.ModelAdmin):
 
 @admin.register(power_station.Power_Station, site=mi_admin_site)
 class PowerAdmin(admin.ModelAdmin):
-    list_display = ["sn", "fecha_armado"]
+    list_display = ["sn", "tipo", "w", "paneles", "expansiones", "bases", "fecha_armado"]
+    readonly_fields = ["w", "paneles", "expansiones", "bases"]
+    fields = ["sn", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
 
 
 @admin.register(registro.Registro, site=mi_admin_site)
@@ -99,20 +115,23 @@ class RegistroAdmin(admin.ModelAdmin):
             'fields': (('cliente', 'empresa'),),
         }),
         ('Producto', {
-            'fields': (('triciclo', 'power_station'),),
+            'fields': (('triciclo', 'power_station', 'panel'),),
         }),
         ('Otros', {
-            'fields': ('fecha_entregado', 'llamada', 'numero_reporte', 'tiempoR'),
+            'fields': ('fecha_entregado', 'numero_reporte', 'tiempoR'),
+        }),
+        ('Notificación', {
+            'fields': ('llamada', 'receptor'),
         }),
     )
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        if not obj:  # Creando
-            readonly_fields.extend(['llamada'])
-        else:  # Editando
-            if obj.llamada:
-                readonly_fields.append('llamada')
+        
+        # Si está creando un registro
+        if not obj or obj.llamada:
+            readonly_fields.extend(['llamada', 'receptor'])  # Bloquear ambos campos
+        
         return readonly_fields
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -130,6 +149,12 @@ class RegistroAdmin(admin.ModelAdmin):
                                                   .values_list('power_station__sn', flat=True)
             kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
 
+        elif db_field.name == "panels":
+            excluded_id = registro.Registro.objects.exclude(pk=obj_id) \
+                                                  .exclude(panels__isnull=True) \
+                                                  .values_list('panel__id', flat=True)
+            kwargs["queryset"] = panels.Panels.objects.exclude(id__in=excluded_id)
+
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
 @admin.register(garantia.Garantia, site=mi_admin_site)
@@ -140,10 +165,10 @@ class GarantiaAdmin(admin.ModelAdmin):
             'fields': (('cliente', 'empresa'),),
         }),
         ('Producto', {
-            'fields': (('triciclo', 'power_station'),),
+            'fields': (('triciclo', 'power_station', 'panel'),),
         }),
         ('Otros', {
-            'fields': ('motivo', 'evaluacion', 'trabajos_hechos', 'piezas_usadas', 'recomendaciones', 'nombre_especialista', 'conformidad_cliente', 'facturar_a',),
+            'fields': ('motivo', 'evaluacion', 'trabajos_hechos', 'piezas_usadas', 'recomendaciones', 'nombre_especialista', 'conformidad_cliente'),
         })
     )
 
