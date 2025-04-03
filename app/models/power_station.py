@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db import models
+from .panels import Panels
 
 class Power_Station(models.Model):
     TIPO_CHOICES = [
@@ -36,3 +37,7 @@ class Power_Station(models.Model):
             self.expansiones = data['expansiones']
             self.bases = data['bases']
         super().save(*args, **kwargs)
+
+class PowerStationPanel(models.Model):
+    power_station = models.ForeignKey(Power_Station, on_delete=models.CASCADE)
+    panel = models.OneToOneField(Panels, on_delete=models.CASCADE, unique=True)  # Referencia directa

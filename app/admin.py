@@ -4,6 +4,7 @@ from .models import registro, garantia, cliente, empresa, triciclo, power_statio
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.db import models
+from django.forms.models import BaseInlineFormSet
 
 
 
@@ -65,13 +66,12 @@ class RegistroForm(forms.ModelForm):
         # Validación producto
         triciclo = cleaned_data.get('triciclo')
         power_station = cleaned_data.get('power_station')
-        panel = cleaned_data.get('panel')
         
         # Contar cuántos productos están seleccionados
-        count = sum([bool(triciclo), bool(power_station), bool(panel)])
+        count = sum([bool(triciclo), bool(power_station)])
         
         if count > 1:
-            raise forms.ValidationError("Selecciona solo un Triciclo, una Power Station o un Panel")
+            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station")
         
         return cleaned_data
 
@@ -82,7 +82,6 @@ class GarantiaForm(forms.ModelForm):
         help_texts = {
             'triciclo': 'Guarde primero después de seleccionar cliente/empresa.',
             'power_station': 'Guarde primero después de seleccionar cliente/empresa.',
-            'panel': 'Guarde primero después de seleccionar cliente/empresa.',
         }
 
     def __init__(self, *args, **kwargs):
@@ -91,7 +90,7 @@ class GarantiaForm(forms.ModelForm):
         
         # Si es creación (no tiene PK), deshabilitar campos de producto
         if not instance or not instance.pk:
-            for field in ['triciclo', 'power_station', 'panel']:
+            for field in ['triciclo', 'power_station']:
                 if field in self.fields:  # ¡Verificar si el campo existe!
                     self.fields[field].disabled = True
                     self.fields[field].help_text = "Guarde primero después de seleccionar cliente/empresa."
@@ -132,11 +131,61 @@ class TricicloAdmin(admin.ModelAdmin):
         
         return readonly_fields
 
+
+
+
+class PowerStationPanelInlineFormset(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        tipo = None
+        if self.instance and self.instance.pk:
+            tipo = self.instance.tipo
+        else:
+            tipo = self.data.get('tipo')  # Obtener tipo del formulario principal
+        
+        tipo_mapping = {
+            '1-300w': 1,
+            '2-600w': 1,
+            '3-1200w': 2,
+            '4-2400w': 3,
+            '5-3000w': 3,
+        }
+        required = tipo_mapping.get(tipo, 0)
+        
+        count = 0
+        for form in self.forms:
+            if not form.cleaned_data.get('DELETE', False) and form.cleaned_data.get('panel'):
+                count += 1
+        
+        if count != required:
+            raise forms.ValidationError(f"Se requieren {required} paneles para el tipo {tipo}.")
+
+class PowerStationPanelInline(admin.TabularInline):
+    model = power_station.PowerStationPanel
+    formset = PowerStationPanelInlineFormset
+    extra = 3  # Máximo necesario
+    verbose_name = "Panel"
+    verbose_name_plural = "Paneles"
+    fk_name = 'power_station'  # Obligatorio si hay múltiples ForeignKeys al mismo modelo
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'panel':
+            power_station_id = request.resolver_match.kwargs.get('object_id')
+            linked_panels = power_station.PowerStationPanel.objects.exclude(
+                power_station_id=power_station_id
+            ).values_list('panel_id', flat=True)
+            kwargs['queryset'] = panels.Panels.objects.exclude(id__in=linked_panels)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+
 @admin.register(power_station.Power_Station, site=mi_admin_site)
 class PowerAdmin(admin.ModelAdmin):
     list_display = ["sn", "tipo", "w", "paneles", "expansiones", "bases", "fecha_armado"]
     readonly_fields = ["w", "paneles", "expansiones", "bases"]
     fields = ["sn", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
+    inlines = [PowerStationPanelInline]
+
 
 
 @admin.register(registro.Registro, site=mi_admin_site)
@@ -148,7 +197,7 @@ class RegistroAdmin(admin.ModelAdmin):
             'fields': (('cliente', 'empresa'),),
         }),
         ('Producto', {
-            'fields': (('triciclo', 'power_station', 'panel'),),
+            'fields': (('triciclo', 'power_station'),),
         }),
         ('Otros', {
             'fields': ('fecha_entregado', 'numero_reporte', 'tiempoR'),
@@ -182,11 +231,6 @@ class RegistroAdmin(admin.ModelAdmin):
                                                   .values_list('power_station__sn', flat=True)
             kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
 
-        elif db_field.name == "panel":  # Corregido de "panels" a "panel"
-            excluded_id = registro.Registro.objects.exclude(pk=obj_id) \
-                                                  .exclude(panel__isnull=True) \
-                                                  .values_list('panel__id', flat=True)
-            kwargs["queryset"] = panels.Panels.objects.exclude(id__in=excluded_id)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
@@ -198,7 +242,7 @@ class GarantiaAdmin(admin.ModelAdmin):
             'fields': (('cliente', 'empresa'),),
         }),
         ('Producto', {
-            'fields': (('triciclo', 'power_station', 'panel'),),
+            'fields': (('triciclo', 'power_station'),),
             'description': "Seleccione un producto después de guardar y elegir cliente/empresa."  # Texto descriptivo
         }),
         ('Otros', {
@@ -230,8 +274,5 @@ class GarantiaAdmin(admin.ModelAdmin):
         elif db_field.name == "power_station":
             ps_ids = registros.exclude(power_station__isnull=True).values_list('power_station_id', flat=True)
             kwargs["queryset"] = power_station.Power_Station.objects.filter(sn__in=ps_ids)
-        elif db_field.name == "panel":
-            panel_ids = registros.exclude(panel__isnull=True).values_list('panel_id', flat=True)
-            kwargs["queryset"] = panels.Panels.objects.filter(id__in=panel_ids)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
