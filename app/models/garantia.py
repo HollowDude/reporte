@@ -3,7 +3,6 @@ from .cliente import Cliente
 from.empresa import Empresa
 from .triciclo import Triciclo
 from .power_station import Power_Station
-from .panels import Panels
 ESPEC = [
     ("abraham pino valdes", "Abraham Pino Valdes"),
     ("juan", "Juan"),
@@ -23,7 +22,6 @@ class Garantia(models.Model):
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
     triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
     power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
-    panel = models.ForeignKey(Panels, null=True, blank=True, on_delete=models.SET_NULL)
     motivo=models.TextField("Motivo", max_length=255)
     evaluacion=models.TextField("Evaluacion resumen", max_length=255)
     trabajos_hechos=models.TextField("Trabajos realizados", max_length=255)
@@ -33,7 +31,7 @@ class Garantia(models.Model):
     conformidad_cliente=models.BooleanField("Conformidad del cliente")
 
     def __str__(self):
-        return f"Reporte de Recamacion: {self.empresa} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station} - {self.panel}"
+        return f"Reporte de Recamacion: {self.empresa} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station}"
 
     class Meta:
         verbose_name = "Reporte de Reclamacion"

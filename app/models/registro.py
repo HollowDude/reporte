@@ -6,7 +6,6 @@ from .triciclo import Triciclo
 from .power_station import Power_Station
 from .cliente import Cliente
 from .empresa import Empresa
-from .panels import Panels
 
 
 class Registro(models.Model):
@@ -23,7 +22,6 @@ class Registro(models.Model):
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL, help_text = "Cliente a ser Reportado")
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL, help_text = "Empresa a ser Reportada")
     triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
-    panel = models.ForeignKey(Panels, null=True, blank=True, on_delete=models.SET_NULL)
     power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
     receptor = models.CharField(
         "Receptor(es) del correo",
@@ -33,7 +31,7 @@ class Registro(models.Model):
     )
 
     def __str__(self):
-        return f"Relacion de venta: {self.numero_reporte} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station} - {self.panel}"
+        return f"Relacion de venta: {self.numero_reporte} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station}"
 
     def save(self, *args, **kwargs):
 
