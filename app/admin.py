@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from .models import registro, garantia, cliente, empresa, triciclo, power_station, panels
+from .models import registro, garantia, cliente, empresa, triciclo, power_station, panels, garantia_p
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.db import models
@@ -15,6 +15,7 @@ class MiAdminSite(admin.AdminSite):
             {'name': 'Registros', 'models': [
                 {'name': 'Relacion de ventas', 'admin_url': '/admin/app/registro'},
                 {'name': 'Reporte de Reclamaciones', 'admin_url': '/admin/app/garantia/'},
+                {'name': 'Reporte de Garantias', 'admin_url': '/admin/app/garantia_p/'},
             ]},
             {'name': 'Clientes', 'models': [
                 {'name': 'Registros de T.C.P/P.N', 'admin_url': '/admin/app/cliente/'},
@@ -102,7 +103,7 @@ class ClienteAdmin(admin.ModelAdmin):
 
 @admin.register(panels.Panels, site=mi_admin_site)
 class PanelsAdmin(admin.ModelAdmin):
-    list_display = ('kit', 'aut', 'cuchilla', 'act')
+    list_display = ('kit', 'aut', 'cuchilla', 'act', 'num')
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
@@ -183,7 +184,7 @@ class PowerStationPanelInline(admin.TabularInline):
 class PowerAdmin(admin.ModelAdmin):
     list_display = ["sn", "tipo", "w", "paneles", "expansiones", "bases", "fecha_armado"]
     readonly_fields = ["w", "paneles", "expansiones", "bases"]
-    fields = ["sn", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
+    fields = ["sn", "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
     inlines = [PowerStationPanelInline]
 
 
@@ -276,3 +277,73 @@ class GarantiaAdmin(admin.ModelAdmin):
             kwargs["queryset"] = power_station.Power_Station.objects.filter(sn__in=ps_ids)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(garantia_p.Garantia_P, site=mi_admin_site)
+class GarantiaAdmin(admin.ModelAdmin):
+    readonly_fields = ['num']
+    fieldsets = (
+        ('Remitente', {
+            'fields': (('cliente', 'empresa'),),
+            'description': "Seleccione SOLO UN Cliente o una Empresa"
+        }),
+        ('Producto', {
+            'fields': ('power_station',),
+            'description': "Power Stations vendidas al cliente/empresa (seleccione primero cliente/empresa y guarde)"
+        }),
+        ('Otros', {
+            'fields': ('num', 'fecha_em',),
+        })
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if not obj:  # Si es creación
+            return list(readonly_fields) + ['power_station']
+        return readonly_fields
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "power_station" and request.resolver_match.kwargs.get('object_id'):
+            obj = self.get_object(request, request.resolver_match.kwargs['object_id'])
+            
+            # Determinar si es cliente o empresa
+            if obj.cliente:
+                registros = registro.Registro.objects.filter(cliente=obj.cliente, power_station__isnull=False)
+            elif obj.empresa:
+                registros = registro.Registro.objects.filter(empresa=obj.empresa, power_station__isnull=False)
+            else:
+                registros = registro.Registro.objects.none()  # No hay nada que filtrar
+            
+            # Obtener SNs de power stations
+            ps_sns = registros.values_list('power_station__sn', flat=True)
+            
+            # Aplicar filtro EXCLUSIVO
+            kwargs["queryset"] = power_station.Power_Station.objects.filter(sn__in=ps_sns)
+        
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        
+        # Help texts contextuales
+        if 'cliente' in form.base_fields:
+            form.base_fields['cliente'].help_text = "Cliente particular registrado"
+        if 'empresa' in form.base_fields:
+            form.base_fields['empresa'].help_text = "Empresa registrada"
+        if 'power_station' in form.base_fields:
+            form.base_fields['power_station'].help_text = "Solo muestra Power Stations vendidas a este cliente/empresa"
+        
+        return form
+
+    def clean(self):
+        cleaned_data = super().clean()
+        cliente = cleaned_data.get('cliente')
+        empresa = cleaned_data.get('empresa')
+        
+        # Validación exclusividad cliente/empresa
+        if bool(cliente) == bool(empresa):  # Ambos o ninguno
+            raise forms.ValidationError(
+                "Debe seleccionar exclusivamente un Cliente O una Empresa, no ambos ni dejar vacío."
+            )
+        
+        return cleaned_data
