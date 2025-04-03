@@ -12,12 +12,15 @@ class Power_Station(models.Model):
     ]
     
     sn = models.CharField("ID", max_length=255, primary_key=True)
-    fecha_armado = models.DateField(default=datetime.now)
+    fecha_armado = models.DateField("Fecha de Compra", default=datetime.now)
     tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES)
     w = models.IntegerField("Watts", editable=False)
     paneles = models.IntegerField("Paneles", editable=False)
     expansiones = models.IntegerField("Expansiones", editable=False)
     bases = models.IntegerField("Bases de Paneles", editable=False)
+    modelo = models.CharField("Modelo", max_length=255)
+    marca = models.CharField("Marca", default="Perro Rojo", help_text="Marca por defecto de los paneles")
+    dist = models.CharField("Ditribuidora/Tienda", max_length = 255)
 
     def __str__(self):
         return f"ID: {self.sn} Tipo: {self.tipo}"

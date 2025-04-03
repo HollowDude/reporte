@@ -10,9 +10,9 @@ from .empresa import Empresa
 
 class Registro(models.Model):
     RECEPTOR_CHOICES = [
-            ('tallerjireh47@gmail.com', 'Todos'),
-            ('raulv@estudiantes.uci.cu', 'Xavier'),
-            ('elviram@estudiantes.uci.cu', 'Mary'),
+            ('sales07@fuetasa.com', 'Todos'),
+            ('pino.isaac27@gmail.com', 'Isaac'),
+            ('tallerjireh47@gmail.com', 'Mary'),
         ]
 
     fecha_entregado = models.DateField("Fecha entregado",default = date.today())
