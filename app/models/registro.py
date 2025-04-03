@@ -20,8 +20,8 @@ class Registro(models.Model):
     tiempoR = models.IntegerField("Tiempo Restante", editable=False)
     numero_reporte = models.IntegerField(editable=False, unique=True)
     llamada = models.TextField("Reportar por correo(Especificar motivo)", blank = True)
-    cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
-    empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
+    cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL, help_text = "Cliente a ser Reportado")
+    empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL, help_text = "Empresa a ser Reportada")
     triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
     panel = models.ForeignKey(Panels, null=True, blank=True, on_delete=models.SET_NULL)
     power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
@@ -29,7 +29,7 @@ class Registro(models.Model):
         "Receptor(es) del correo",
         max_length=255,
         blank=True,
-        help_text="Selecciona uno o varios receptores"
+        help_text="Selecciona uno o varios receptores, o Todos"
     )
 
     def __str__(self):
