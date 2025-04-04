@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 from django.db import models
 from .panels import Panels
 
@@ -12,14 +13,15 @@ class Power_Station(models.Model):
     ]
     
     sn = models.CharField("ID", max_length=255, primary_key=True)
+    num = models.UUIDField("Numero de Serie", default=uuid.uuid4, help_text="Identificador único generado automáticamente" )
     fecha_armado = models.DateField("Fecha de Compra", default=datetime.now)
     tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES)
-    w = models.IntegerField("Watts", editable=False)
+    w = models.IntegerField("Potencia/Capacidad(Watts)", editable=False)
     paneles = models.IntegerField("Paneles", editable=False)
     expansiones = models.IntegerField("Expansiones", editable=False)
     bases = models.IntegerField("Bases de Paneles", editable=False)
-    modelo = models.CharField("Modelo", max_length=255)
-    marca = models.CharField("Marca", default="Perro Rojo", help_text="Marca por defecto de los paneles")
+    modelo = models.CharField("Modelo", max_length=255, default="Longi", help_text="Modelo por defecto de las Power_Stations")
+    marca = models.CharField("Marca", default="Perro Rojo", help_text="Marca por defecto de las Power_Stations")
     dist = models.CharField("Ditribuidora/Tienda", max_length = 255)
 
     def __str__(self):
