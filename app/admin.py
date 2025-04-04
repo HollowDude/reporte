@@ -184,7 +184,7 @@ class PowerStationPanelInline(admin.TabularInline):
 class PowerAdmin(admin.ModelAdmin):
     list_display = ["sn", "tipo", "w", "paneles", "expansiones", "bases", "fecha_armado"]
     readonly_fields = ["w", "paneles", "expansiones", "bases"]
-    fields = ["sn", "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
+    fields = ["sn", "num", "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
     inlines = [PowerStationPanelInline]
 
 
@@ -291,8 +291,38 @@ class GarantiaAdmin(admin.ModelAdmin):
             'fields': ('power_station',),
             'description': "Power Stations vendidas al cliente/empresa (seleccione primero cliente/empresa y guarde)"
         }),
-        ('Otros', {
-            'fields': ('num', 'fecha_em',),
+        ('Datos de Garantía', {
+            'fields': ('num', 'fecha_em'),
+            'description': "Información básica de la garantía"
+        }),
+        ('Condiciones Generales', {
+            'fields': ('condiciones_generales',),
+            'classes': ('collapse',),
+            'description': "Términos básicos de la garantía"
+        }),
+        ('Exclusiones de Garantía', {
+            'fields': ('exclusiones_garantia',),
+            'classes': ('collapse',),
+            'description': "Situaciones no cubiertas por la garantía"
+        }),
+        ('Políticas de Reparación', {
+            'fields': ('condiciones_reparacion',),
+            'classes': ('collapse',),
+            'description': "Procedimientos para reparaciones cubiertas"
+        }),
+        ('Políticas de Sustitución', {
+            'fields': ('condiciones_sustitucion',),
+            'classes': ('collapse',),
+            'description': "Condiciones para reemplazo del producto"
+        }),
+        ('Costos y Coberturas', {
+            'fields': ('politicas_costos',),
+            'classes': ('collapse',),
+            'description': "Detalles de costos asociados"
+        }),
+        ('Procedimiento de Reclamo', {
+            'fields': ('procedimiento_reclamo',),
+            'description': "Pasos para hacer válida la garantía"
         })
     )
 
