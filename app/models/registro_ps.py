@@ -8,7 +8,7 @@ from .cliente import Cliente
 from .empresa import Empresa
 
 
-class Registro(models.Model):
+class Registro_ps(models.Model):
     RECEPTOR_CHOICES = [
             ('pino.isaac27@gmail.com', 'Isaac'),
             ('tallerjireh47@gmail.com', 'Mary'),
@@ -20,7 +20,7 @@ class Registro(models.Model):
     llamada = models.TextField("Reportar por correo(Especificar motivo)", blank = True)
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL, help_text = "Cliente a ser Reportado")
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL, help_text = "Empresa a ser Reportada")
-    triciclo = models.ForeignKey(Triciclo, null=True, blank=True, on_delete=models.SET_NULL)
+    power_station = models.ForeignKey(Power_Station, null=True, blank=True, on_delete=models.SET_NULL)
     receptor = models.CharField(
         "Receptor(es) del correo",
         max_length=255,
@@ -30,24 +30,24 @@ class Registro(models.Model):
 
     def __str__(self):
         if self.cliente:
-            return f"Relacion de venta: {self.numero_reporte} - {self.cliente}  -> {self.triciclo}"
+            return f"Relacion de venta: {self.numero_reporte} - {self.cliente}  -> {self.power_station}"
         else:
-            return f"Relacion de venta: {self.numero_reporte} - {self.empresa}  -> {self.triciclo}"
+            return f"Relacion de venta: {self.numero_reporte} - {self.empresa}  -> {self.power_station}"
 
     def save(self, *args, **kwargs):
 
         if not self.pk:
             dias_transcurridos = (date.today() - self.fecha_entregado).days
-            self.tiempoR = max(0, 365 - dias_transcurridos) 
+            self.tiempoR = max(0, 720 - dias_transcurridos) 
         super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Relacion de venta"
         verbose_name_plural = "Relacion de ventas"
 
-@receiver(pre_save, sender=Registro)
+@receiver(pre_save, sender=Registro_ps)
 def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
-        last_reporte = Registro.objects.order_by('-numero_reporte').first()
+        last_reporte = Registro_ps.objects.order_by('-numero_reporte').first()
         instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
         

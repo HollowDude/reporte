@@ -13,7 +13,7 @@ class Power_Station(models.Model):
     ]
     
     sn = models.CharField("ID", max_length=255, primary_key=True)
-    num = models.UUIDField("Numero de Serie", default=uuid.uuid4, help_text="Identificador único generado automáticamente" )
+    num = models.CharField("Numero de Serie", default=uuid.uuid4, help_text="Identificador único generado automáticamente" )
     fecha_armado = models.DateField("Fecha de Compra", default=datetime.now)
     tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES)
     w = models.IntegerField("Potencia/Capacidad(Watts)", editable=False)

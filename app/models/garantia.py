@@ -31,7 +31,16 @@ class Garantia(models.Model):
     conformidad_cliente=models.BooleanField("Conformidad del cliente")
 
     def __str__(self):
-        return f"Reporte de Recamacion: {self.empresa} - {self.cliente} - {self.empresa} -> {self.triciclo} - {self.power_station}"
+        if self.cliente:
+            if self.triciclo:
+                return f"Reporte de Reclamacion: {self.cliente}  -> {self.triciclo}"
+            else:
+                return f"Reporte de Reclamacion: {self.cliente}  -> {self.power_station}"
+        else:
+            if self.triciclo:
+                return f"Reporte de Reclamacion: {self.empresa}  -> {self.triciclo}"
+            else:
+                return f"Reporte de Reclamacion: {self.empresa}  -> {self.power_station}"
 
     class Meta:
         verbose_name = "Reporte de Reclamacion"
