@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from .models import registro, garantia, cliente, empresa, triciclo, power_station, panels, garantia_p
+from .models import registro, registro_ps, garantia, cliente, empresa, triciclo, power_station, panels, garantia_p
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.db import models
@@ -13,7 +13,8 @@ class MiAdminSite(admin.AdminSite):
         app_list = super().get_app_list(request)
         orden_aplicaciones = [
             {'name': 'Registros', 'models': [
-                {'name': 'Relacion de ventas', 'admin_url': '/admin/app/registro'},
+                {'name': 'Relacion de ventas(Triciclos)', 'admin_url': '/admin/app/registro'},
+                {'name': 'Relacion de ventas(Power Stations)', 'admin_url': '/admin/app/registro_ps'},
                 {'name': 'Reporte de Reclamaciones', 'admin_url': '/admin/app/garantia/'},
                 {'name': 'Reporte de Garantias', 'admin_url': '/admin/app/garantia_p/'},
             ]},
@@ -40,13 +41,17 @@ mi_admin_site.index_title = 'Bienvenido al administrador de Empresa'
 mi_admin_site.register(User, UserAdmin)
 mi_admin_site.register(Group, GroupAdmin)
 
+REGISTRO_CHOICES_SIN_TODOS = [
+    choice for choice in registro.Registro.RECEPTOR_CHOICES if choice[0] != 'sales07@fuetasa.com'
+]
 
 class RegistroForm(forms.ModelForm):
     receptor = forms.MultipleChoiceField(
-        choices=registro.Registro.RECEPTOR_CHOICES,
+        choices=REGISTRO_CHOICES_SIN_TODOS,
         widget=forms.CheckboxSelectMultiple,
         required=True
     )
+    
     class Meta:
         model = registro.Registro
         fields = '__all__'
@@ -57,23 +62,33 @@ class RegistroForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        
-        # Validación comprador
         cliente = cleaned_data.get('cliente')
         empresa = cleaned_data.get('empresa')
         if (cliente and empresa) or (not cliente and not empresa):
             raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
-            
-        # Validación producto
-        triciclo = cleaned_data.get('triciclo')
-        power_station = cleaned_data.get('power_station')
-        
-        # Contar cuántos productos están seleccionados
-        count = sum([bool(triciclo), bool(power_station)])
-        
-        if count > 1:
-            raise forms.ValidationError("Selecciona solo un Triciclo o una Power Station")
-        
+        return cleaned_data
+
+class Registro_psForm(forms.ModelForm):
+    receptor = forms.MultipleChoiceField(
+        choices=REGISTRO_CHOICES_SIN_TODOS,
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+    
+    class Meta:
+        model = registro_ps.Registro_ps
+        fields = '__all__'
+
+    def clean_receptor(self):
+        data = self.cleaned_data['receptor']
+        return ','.join(data)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        cliente = cleaned_data.get('cliente')
+        empresa = cleaned_data.get('empresa')
+        if (cliente and empresa) or (not cliente and not empresa):
+            raise forms.ValidationError("Selecciona solo un Cliente o una Empresa")
         return cleaned_data
 
 class GarantiaForm(forms.ModelForm):
@@ -198,7 +213,7 @@ class RegistroAdmin(admin.ModelAdmin):
             'fields': (('cliente', 'empresa'),),
         }),
         ('Producto', {
-            'fields': (('triciclo', 'power_station'),),
+            'fields': (('triciclo'),),
         }),
         ('Otros', {
             'fields': ('fecha_entregado', 'numero_reporte', 'tiempoR'),
@@ -226,15 +241,50 @@ class RegistroAdmin(admin.ModelAdmin):
                                                     .values_list('triciclo__vin', flat=True)
             kwargs["queryset"] = triciclo.Triciclo.objects.exclude(vin__in=excluded_vins)
 
-        elif db_field.name == "power_station":
-            excluded_sns = registro.Registro.objects.exclude(pk=obj_id) \
-                                                  .exclude(power_station__isnull=True) \
-                                                  .values_list('power_station__sn', flat=True)
-            kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
-
-
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
+    @admin.register(registro_ps.Registro_ps, site=mi_admin_site)
+    class Registro_psAdmin(admin.ModelAdmin):
+        form = Registro_psForm
+        readonly_fields = ['numero_reporte', 'tiempoR']
+        fieldsets = (
+            ('Comprador', {
+                'fields': (('cliente', 'empresa'),),
+            }),
+            ('Producto', {
+                'fields': (('power_station'),),
+            }),
+            ('Otros', {
+                'fields': ('fecha_entregado', 'numero_reporte', 'tiempoR'),
+            }),
+            ('Notificación', {
+                'fields': ('llamada', 'receptor'),
+            }),
+        )
+
+        def get_readonly_fields(self, request, obj=None):
+            readonly_fields = list(super().get_readonly_fields(request, obj))
+            
+            # Si está creando un registro
+            if not obj or obj.llamada:
+                readonly_fields.extend(['llamada', 'receptor'])  # Bloquear ambos campos
+            
+            return readonly_fields
+
+        def formfield_for_foreignkey(self, db_field, request, **kwargs):
+            obj_id = request.resolver_match.kwargs.get('object_id')
+            
+
+            if db_field.name == "power_station":
+                excluded_sns = registro_ps.Registro_ps.objects.exclude(pk=obj_id) \
+                                                    .exclude(power_station__isnull=True) \
+                                                    .values_list('power_station__sn', flat=True)
+                kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
+
+
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 @admin.register(garantia.Garantia, site=mi_admin_site)
 class GarantiaAdmin(admin.ModelAdmin):
     form = GarantiaForm
@@ -254,30 +304,7 @@ class GarantiaAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         return super().get_readonly_fields(request, obj)
     
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        obj_id = request.resolver_match.kwargs.get('object_id')
-        if not obj_id:  # Si es creación, no filtrar
-            return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-        obj = self.get_object(request, obj_id)
-        if not obj or not (obj.cliente or obj.empresa):
-            return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-        # Obtener registros de venta del cliente/empresa
-        registros = registro.Registro.objects.filter(
-            models.Q(cliente=obj.cliente) | models.Q(empresa=obj.empresa)
-        )
-
-        # Filtrar productos según registros de venta
-        if db_field.name == "triciclo":
-            triciclos_ids = registros.exclude(triciclo__isnull=True).values_list('triciclo_id', flat=True)
-            kwargs["queryset"] = triciclo.Triciclo.objects.filter(vin__in=triciclos_ids)
-        elif db_field.name == "power_station":
-            ps_ids = registros.exclude(power_station__isnull=True).values_list('power_station_id', flat=True)
-            kwargs["queryset"] = power_station.Power_Station.objects.filter(sn__in=ps_ids)
-
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
+ 
 
 @admin.register(garantia_p.Garantia_P, site=mi_admin_site)
 class GarantiaAdmin(admin.ModelAdmin):
@@ -338,11 +365,11 @@ class GarantiaAdmin(admin.ModelAdmin):
             
             # Determinar si es cliente o empresa
             if obj.cliente:
-                registros = registro.Registro.objects.filter(cliente=obj.cliente, power_station__isnull=False)
+                registros = registro_ps.Registro_ps.objects.filter(cliente=obj.cliente, power_station__isnull=False)
             elif obj.empresa:
-                registros = registro.Registro.objects.filter(empresa=obj.empresa, power_station__isnull=False)
+                registros = registro_ps.Registro_ps.objects.filter(empresa=obj.empresa, power_station__isnull=False)
             else:
-                registros = registro.Registro.objects.none()  # No hay nada que filtrar
+                registros = registro_ps.Registro_ps.objects.none()  # No hay nada que filtrar
             
             # Obtener SNs de power stations
             ps_sns = registros.values_list('power_station__sn', flat=True)
