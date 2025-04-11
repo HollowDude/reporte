@@ -18,7 +18,7 @@ class MiAdminSite(admin.AdminSite):
                 {'name': 'Reporte de Reclamaciones', 'admin_url': '/admin/app/garantia/'},
                 {'name': 'Reporte de Garantias', 'admin_url': '/admin/app/garantia_p/'},
             ]},
-            {'name': 'Clientes', 'models': [
+            {'name': 'Clientes Unificados', 'models': [
                 {'name': 'Registros de T.C.P/P.N', 'admin_url': '/admin/app/cliente/'},
                 {'name': 'Registros de MIPYME', 'admin_url': '/admin/app/empresa/'},
             ]},
@@ -246,7 +246,7 @@ class RegistroAdmin(admin.ModelAdmin):
     @admin.register(registro_ps.Registro_ps, site=mi_admin_site)
     class Registro_psAdmin(admin.ModelAdmin):
         form = Registro_psForm
-        readonly_fields = ['numero_reporte', 'tiempoR']
+        readonly_fields = ['numero_reporte', 'tiempoR', 'tiempoR_pan']
         fieldsets = (
             ('Comprador', {
                 'fields': (('cliente', 'empresa'),),
@@ -255,7 +255,7 @@ class RegistroAdmin(admin.ModelAdmin):
                 'fields': (('power_station'),),
             }),
             ('Otros', {
-                'fields': ('fecha_entregado', 'numero_reporte', 'tiempoR'),
+                'fields': ('fecha_entregado', 'numero_reporte', 'tiempoR', 'tiempoR_pan'),
             }),
             ('Notificación', {
                 'fields': ('llamada', 'receptor'),
