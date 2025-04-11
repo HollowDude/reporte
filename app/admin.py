@@ -15,8 +15,8 @@ class MiAdminSite(admin.AdminSite):
             {'name': 'Registros', 'models': [
                 {'name': 'Relacion de ventas(Triciclos)', 'admin_url': '/admin/app/registro'},
                 {'name': 'Relacion de ventas(Power Stations)', 'admin_url': '/admin/app/registro_ps'},
-                {'name': 'Reporte de Reclamaciones', 'admin_url': '/admin/app/garantia/'},
-                {'name': 'Reporte de Garantias', 'admin_url': '/admin/app/garantia_p/'},
+                {'name': 'Reporte de Reclamaciones(Triciclos)', 'admin_url': '/admin/app/garantia/'},
+                {'name': 'Reporte de Garantias(Power Stations)', 'admin_url': '/admin/app/garantia_p/'},
             ]},
             {'name': 'Clientes Unificados', 'models': [
                 {'name': 'Registros de T.C.P/P.N', 'admin_url': '/admin/app/cliente/'},
