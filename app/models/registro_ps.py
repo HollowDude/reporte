@@ -15,7 +15,8 @@ class Registro_ps(models.Model):
         ]
 
     fecha_entregado = models.DateField("Fecha entregado",default = date.today())
-    tiempoR = models.IntegerField("Tiempo Restante", editable=False)
+    tiempoR = models.IntegerField("Tiempo Restante(PowerStation)", editable=False)
+    tiempoR_pan = models.IntegerField("Tiempo Restante(Paneles)", editable=False)
     numero_reporte = models.IntegerField(editable=False, unique=True)
     llamada = models.TextField("Reportar por correo(Especificar motivo)", blank = True)
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL, help_text = "Cliente a ser Reportado")
@@ -38,7 +39,8 @@ class Registro_ps(models.Model):
 
         if not self.pk:
             dias_transcurridos = (date.today() - self.fecha_entregado).days
-            self.tiempoR = max(0, 720 - dias_transcurridos) 
+            self.tiempoR = max(0, 365 - dias_transcurridos) 
+            self.tiempoR_pan = max(0, 720 - dias_transcurridos) 
         super().save(*args, **kwargs)
 
     class Meta:
