@@ -5,15 +5,14 @@ from .panels import Panels
 
 class Power_Station(models.Model):
     TIPO_CHOICES = [
-        ('1-300w', '1-300W'),
-        ('2-600w', '2-600W'),
-        ('3-1200w', '3-1200W'),
-        ('4-2400w', '4-2400W'),
-        ('5-3000w', '5-3000W'),
+        ('300w', '300W'),
+        ('600w', '600W'),
+        ('1200w', '1200W'),
+        ('2400w', '2400W'),
+        ('3000w', '3000W'),
     ]
     
     sn = models.CharField("ID", max_length=255, primary_key=True)
-    num = models.CharField("Numero de Serie", default=uuid.uuid4, help_text="Identificador único generado automáticamente" )
     fecha_armado = models.DateField("Fecha de Compra", default=datetime.now)
     tipo = models.CharField("Tipo", max_length=10, choices=TIPO_CHOICES)
     w = models.IntegerField("Potencia/Capacidad(Watts)", editable=False)
@@ -23,17 +22,19 @@ class Power_Station(models.Model):
     modelo = models.CharField("Modelo", max_length=255, default="Longi", help_text="Modelo por defecto de las Power_Stations")
     marca = models.CharField("Marca", default="Perro Rojo", help_text="Marca por defecto de las Power_Stations")
     dist = models.CharField("Ditribuidora/Tienda", max_length = 255)
+    vinch = models.CharField("Vin de chasis", max_length=255) #Beware
+    nume = models.CharField("Numero de extensor", max_length=255) #Beware
 
     def __str__(self):
         return f"ID: {self.sn} Tipo: {self.tipo}"
 
     def save(self, *args, **kwargs):
         tipo_mapping = {
-            '1-300w': {'w': 300, 'paneles': 1, 'expansiones': 4, 'bases': 2},
-            '2-600w': {'w': 600, 'paneles': 1, 'expansiones': 4, 'bases': 2},
-            '3-1200w': {'w': 1200, 'paneles': 2, 'expansiones': 8, 'bases': 4},
-            '4-2400w': {'w': 2400, 'paneles': 3, 'expansiones': 12, 'bases': 6},
-            '5-3000w': {'w': 3000, 'paneles': 3, 'expansiones': 12, 'bases': 6},
+            '300w': {'w': 300, 'paneles': 1, 'expansiones': 4, 'bases': 2},
+            '600w': {'w': 600, 'paneles': 1, 'expansiones': 4, 'bases': 2},
+            '1200w': {'w': 1200, 'paneles': 2, 'expansiones': 8, 'bases': 4},
+            '2400w': {'w': 2400, 'paneles': 3, 'expansiones': 12, 'bases': 6},
+            '3000w': {'w': 3000, 'paneles': 3, 'expansiones': 12, 'bases': 6},
         }
         if self.tipo in tipo_mapping:
             data = tipo_mapping[self.tipo]
