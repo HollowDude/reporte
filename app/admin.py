@@ -160,11 +160,11 @@ class PowerStationPanelInlineFormset(BaseInlineFormSet):
             tipo = self.data.get('tipo')  # Obtener tipo del formulario principal
         
         tipo_mapping = {
-            '1-300w': 1,
-            '2-600w': 1,
-            '3-1200w': 2,
-            '4-2400w': 3,
-            '5-3000w': 3,
+            '300w': 1,
+            '600w': 1,
+            '1200w': 2,
+            '2400w': 3,
+            '3000w': 3,
         }
         required = tipo_mapping.get(tipo, 0)
         
@@ -182,7 +182,7 @@ class PowerStationPanelInline(admin.TabularInline):
     extra = 3  # Máximo necesario
     verbose_name = "Panel"
     verbose_name_plural = "Paneles"
-    fk_name = 'power_station'  # Obligatorio si hay múltiples ForeignKeys al mismo modelo
+    fk_name = 'power_station'  
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'panel':
@@ -199,7 +199,7 @@ class PowerStationPanelInline(admin.TabularInline):
 class PowerAdmin(admin.ModelAdmin):
     list_display = ["sn", "tipo", "w", "paneles", "expansiones", "bases", "fecha_armado"]
     readonly_fields = ["w", "paneles", "expansiones", "bases"]
-    fields = ["sn", "num", "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
+    fields = ["sn", "vinch", "nume", "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
     inlines = [PowerStationPanelInline]
 
 
