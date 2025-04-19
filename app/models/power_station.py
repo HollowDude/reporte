@@ -22,8 +22,6 @@ class Power_Station(models.Model):
     modelo = models.CharField("Modelo", max_length=255, default="Longi", help_text="Modelo por defecto de las Power_Stations")
     marca = models.CharField("Marca", default="Perro Rojo", help_text="Marca por defecto de las Power_Stations")
     dist = models.CharField("Ditribuidora/Tienda", max_length = 255)
-    vinch = models.CharField("Vin de chasis", max_length=255) #Beware
-    nume = models.CharField("Numero de extensor", max_length=255) #Beware
 
     def __str__(self):
         return f"ID: {self.sn} Tipo: {self.tipo}"

@@ -135,7 +135,7 @@ class EmpresaAdmin(admin.ModelAdmin):
 
 @admin.register(triciclo.Triciclo, site=mi_admin_site)
 class TricicloAdmin(admin.ModelAdmin):
-    list_display = ["vin", "fecha_armado", "num_m", "extensor_rango", "sello", "fecha_autorizado", "autorizado"]
+    list_display = ["vin", "vinch", "fecha_armado", "num_m", "nume", "extensor_rango", "sello", "fecha_autorizado", "autorizado"]
     search_fields = ('autorizado', 'fecha_autorizado')
 
     def get_readonly_fields(self, request, obj=None):
@@ -199,7 +199,7 @@ class PowerStationPanelInline(admin.TabularInline):
 class PowerAdmin(admin.ModelAdmin):
     list_display = ["sn", "tipo", "w", "paneles", "expansiones", "bases", "fecha_armado"]
     readonly_fields = ["w", "paneles", "expansiones", "bases"]
-    fields = ["sn", "vinch", "nume", "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
+    fields = ["sn",  "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
     inlines = [PowerStationPanelInline]
 
 
