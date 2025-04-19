@@ -12,6 +12,9 @@ class Triciclo(models.Model):
     extensor_rango = models.CharField(max_length=255, blank=True)
     fecha_autorizado = models.DateField(blank = True, null = True, help_text="Aparecera automaticamente al autorizar el triciclo")
     autorizado = models.BooleanField(default=False, help_text="El triciclo se autorizara solo por el encargado de ello")
+    vinch = models.CharField("Vin de chasis", max_length=255) #Beware
+    nume = models.CharField("Numero de extensor", max_length=255) #Beware
+
 
     def __str__(self):
         return f"VIN: {self.vin} - Extensor: {self.extensor_rango}"
