@@ -135,7 +135,7 @@ class EmpresaAdmin(admin.ModelAdmin):
 
 @admin.register(triciclo.Triciclo, site=mi_admin_site)
 class TricicloAdmin(admin.ModelAdmin):
-    list_display = ["vin", "vinch", "fecha_armado", "num_m", "nume", "extensor_rango", "sello", "fecha_autorizado", "autorizado"]
+    list_display = ["vin", "vinch", "fecha_armado", "num_m", "nume", "extensor_rango", "sello", "fecha_autorizado", "autorizado", "obser"]
     search_fields = ('autorizado', 'fecha_autorizado')
 
     def get_readonly_fields(self, request, obj=None):
