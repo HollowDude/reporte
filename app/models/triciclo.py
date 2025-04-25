@@ -14,6 +14,7 @@ class Triciclo(models.Model):
     autorizado = models.BooleanField(default=False, help_text="El triciclo se autorizara solo por el encargado de ello")
     vinch = models.CharField("Vin de chasis", max_length=255) #Beware
     nume = models.CharField("Numero de extensor", max_length=255) #Beware
+    obser = models.TextField("Observaciones adicionales", help_text="Algunas observaciones sobre el triciclo que pueden ser modificadas a lo largo del tiempo")
 
 
     def __str__(self):
