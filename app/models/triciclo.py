@@ -5,6 +5,17 @@ from django.forms import ValidationError
 from django.db.models.signals import pre_save
 
 class Triciclo(models.Model):
+    MODELOS = [
+        ('triciclo con extensor de rango', 'TRICICLO CON EXTENSOR DE RANGO'),
+        ('triciclo eléctrico de carga', 'TRICICLO ELÉCTRICO DE CARGA'),
+        ('triciclo eléctrico con panel solar', 'TRICICLO ELÉCTRICO CON PANEL SOLAR'),
+        ('moto ry', 'MOTO RY'),
+        ('cuatriciclo t90', 'CUATRICICLO T90'),
+    ]
+
+
+
+
     vin = models.CharField("Vin", max_length=255, primary_key=True)
     fecha_armado = models.DateField(default=datetime.now, help_text="Fecha en que se armo el triciclo")
     num_m = models.CharField("Numero de Motor", max_length = 255, blank=True)
@@ -12,13 +23,12 @@ class Triciclo(models.Model):
     extensor_rango = models.CharField(max_length=255, blank=True)
     fecha_autorizado = models.DateField(blank = True, null = True, help_text="Aparecera automaticamente al autorizar el triciclo")
     autorizado = models.BooleanField(default=False, help_text="El triciclo se autorizara solo por el encargado de ello")
-    vinch = models.CharField("Vin de chasis", max_length=255) #Beware
-    nume = models.CharField("Numero de extensor", max_length=255) #Beware
     obser = models.TextField("Observaciones adicionales", help_text="Algunas observaciones sobre el triciclo que pueden ser modificadas a lo largo del tiempo")
+    modelo = models.CharField("Modelo", max_length=255, choices=MODELOS ,help_text="Modelo del Triciclo")
 
 
     def __str__(self):
-        return f"VIN: {self.vin} - Extensor: {self.extensor_rango}"
+        return f"VIN: {self.vin} - Modelo: {self.modelo}"
 
     def clean(self):
         super().clean() 
