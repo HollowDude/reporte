@@ -16,7 +16,7 @@ class MiAdminSite(admin.AdminSite):
                 {'name': 'Relacion de ventas(Triciclos)', 'admin_url': '/admin/app/registro'},
                 {'name': 'Relacion de ventas(Power Stations)', 'admin_url': '/admin/app/registro_ps'},
                 {'name': 'Reporte de Reclamaciones(Triciclos)', 'admin_url': '/admin/app/garantia/'},
-                {'name': 'Reporte de Garantias(Power Stations)', 'admin_url': '/admin/app/garantia_p/'},
+                {'name': 'Reporte de Reclamaciones(Power Stations)', 'admin_url': '/admin/app/garantia_p/'},
             ]},
             {'name': 'Clientes Unificados', 'models': [
                 {'name': 'Registros de T.C.P/P.N', 'admin_url': '/admin/app/cliente/'},
@@ -135,7 +135,7 @@ class EmpresaAdmin(admin.ModelAdmin):
 
 @admin.register(triciclo.Triciclo, site=mi_admin_site)
 class TricicloAdmin(admin.ModelAdmin):
-    list_display = ["vin", "vinch", "fecha_armado", "num_m", "nume", "extensor_rango", "sello", "fecha_autorizado", "autorizado", "obser"]
+    list_display = ["vin", "modelo", "fecha_armado", "num_m", "extensor_rango", "sello", "fecha_autorizado", "autorizado", "obser"]
     search_fields = ('autorizado', 'fecha_autorizado')
 
     def get_readonly_fields(self, request, obj=None):
@@ -360,25 +360,23 @@ class GarantiaAdmin(admin.ModelAdmin):
         return readonly_fields
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "power_station" and request.resolver_match.kwargs.get('object_id'):
-            obj = self.get_object(request, request.resolver_match.kwargs['object_id'])
-            
-            # Determinar si es cliente o empresa
-            if obj.cliente:
-                registros = registro_ps.Registro_ps.objects.filter(cliente=obj.cliente, power_station__isnull=False)
-            elif obj.empresa:
-                registros = registro_ps.Registro_ps.objects.filter(empresa=obj.empresa, power_station__isnull=False)
-            else:
-                registros = registro_ps.Registro_ps.objects.none()  # No hay nada que filtrar
-            
-            # Obtener SNs de power stations
-            ps_sns = registros.values_list('power_station__sn', flat=True)
-            
-            # Aplicar filtro EXCLUSIVO
-            kwargs["queryset"] = power_station.Power_Station.objects.filter(sn__in=ps_sns)
-        
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "power_station":
+            object_id = request.resolver_match.kwargs.get('object_id')
+            if object_id:
+                obj = self.get_object(request, object_id)
+                if obj:
+                    # Determinar si es cliente o empresa
+                    if obj.cliente:
+                        registros = registro_ps.Registro_ps.objects.filter(cliente=obj.cliente, power_station__isnull=False)
+                    elif obj.empresa:
+                        registros = registro_ps.Registro_ps.objects.filter(empresa=obj.empresa, power_station__isnull=False)
+                    else:
+                        registros = registro_ps.Registro_ps.objects.none()
 
+                    ps_sns = registros.values_list('power_station__sn', flat=True)
+                    kwargs["queryset"] = power_station.Power_Station.objects.filter(sn__in=ps_sns)
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         

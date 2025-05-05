@@ -7,7 +7,7 @@ from .power_station import Power_Station
 from django.db.models.signals import pre_save
 
 class Garantia_P(models.Model):
-    num = models.IntegerField("Numero de Garantia", primary_key=True, help_text="Se genera automaticamente y es secuencial")
+    num = models.CharField("Numero de Garantia", primary_key=True, help_text="Se genera automaticamente y es secuencial en el formato PS###/YYYY")
     fecha_em = models.DateField("Fecha de Emision", default=date.today())
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
     empresa = models.ForeignKey(Empresa, null=True, blank=True, on_delete=models.SET_NULL)
@@ -93,5 +93,19 @@ El técnico autorizado evaluará el problema y determinará si está cubierto po
 @receiver(pre_save, sender=Garantia_P)
 def set_numero(sender, instance, **kwargs):
     if not instance.num:
-        last_reporte = Garantia_P.objects.order_by('-num').first()
-        instance.num = (last_reporte.num + 1) if last_reporte else 1
+        year = date.today().year
+        prefix = "PS"
+
+        año_actual_garantias = Garantia_P.objects.filter(num__endswith=f"/{year}")
+
+        max_seq = 0
+        for g in año_actual_garantias:
+            try:
+                seq = int(g.num.split("/")[0].replace(prefix, ""))
+                if seq > max_seq:
+                    max_seq = seq
+            except:
+                continue
+        
+        next_seq = max_seq + 1
+        instance.num = f"{prefix}{str(next_seq).zfill(3)}/{year}"
