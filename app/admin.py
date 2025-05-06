@@ -135,13 +135,13 @@ class EmpresaAdmin(admin.ModelAdmin):
 
 @admin.register(triciclo.Triciclo, site=mi_admin_site)
 class TricicloAdmin(admin.ModelAdmin):
-    list_display = ["vin", "modelo", "fecha_armado", "num_m", "extensor_rango", "sello", "fecha_autorizado", "autorizado", "obser"]
+    readonly_fields = ["fecha_v", "vendido"]
+    list_display = ["vin", "modelo", "fecha_armado", "num_m", "extensor_rango", "sello", "fecha_autorizado", "autorizado", "obser", "vendido", "fecha_v"]
     search_fields = ('autorizado', 'fecha_autorizado')
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        
-        # Si está creando un registro
+
         if not obj:
             readonly_fields.extend(['autorizado']) 
         
@@ -198,8 +198,8 @@ class PowerStationPanelInline(admin.TabularInline):
 @admin.register(power_station.Power_Station, site=mi_admin_site)
 class PowerAdmin(admin.ModelAdmin):
     list_display = ["sn", "tipo", "w", "paneles", "expansiones", "bases", "fecha_armado"]
-    readonly_fields = ["w", "paneles", "expansiones", "bases"]
-    fields = ["sn",  "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases"]
+    readonly_fields = ["w", "paneles", "expansiones", "bases", "vendido", "fecha_v"]
+    fields = ["sn",  "modelo", "marca", "dist", "tipo", "fecha_armado", "w", "paneles", "expansiones", "bases", "vendido", "fecha_v"]
     inlines = [PowerStationPanelInline]
 
 
@@ -225,10 +225,9 @@ class RegistroAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        
-        # Si está creando un registro
+
         if not obj or obj.llamada:
-            readonly_fields.extend(['llamada', 'receptor'])  # Bloquear ambos campos
+            readonly_fields.extend(['llamada', 'receptor'])
         
         return readonly_fields
 
@@ -236,9 +235,14 @@ class RegistroAdmin(admin.ModelAdmin):
         obj_id = request.resolver_match.kwargs.get('object_id')
         
         if db_field.name == "triciclo":
-            excluded_vins = registro.Registro.objects.exclude(pk=obj_id) \
-                                                    .exclude(triciclo__isnull=True) \
-                                                    .values_list('triciclo__vin', flat=True)
+            excluded_vins = (
+                registro.Registro.objects
+                    .exclude(pk=obj_id)
+                    .exclude(triciclo__vendido=True)
+                    .exclude(triciclo__isnull=True)
+                    .values_list('triciclo__vin', flat=True)
+                    .distinct() 
+            )
             kwargs["queryset"] = triciclo.Triciclo.objects.exclude(vin__in=excluded_vins)
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -264,25 +268,27 @@ class RegistroAdmin(admin.ModelAdmin):
 
         def get_readonly_fields(self, request, obj=None):
             readonly_fields = list(super().get_readonly_fields(request, obj))
-            
-            # Si está creando un registro
+
             if not obj or obj.llamada:
-                readonly_fields.extend(['llamada', 'receptor'])  # Bloquear ambos campos
+                readonly_fields.extend(['llamada', 'receptor'])
             
             return readonly_fields
 
         def formfield_for_foreignkey(self, db_field, request, **kwargs):
-            obj_id = request.resolver_match.kwargs.get('object_id')
-            
-
             if db_field.name == "power_station":
-                excluded_sns = registro_ps.Registro_ps.objects.exclude(pk=obj_id) \
-                                                    .exclude(power_station__isnull=True) \
-                                                    .values_list('power_station__sn', flat=True)
-                kwargs["queryset"] = power_station.Power_Station.objects.exclude(sn__in=excluded_sns)
-
-
+                qs = power_station.Power_Station.objects.filter(vendido=False)
+                obj_id = request.resolver_match.kwargs.get('object_id')
+                if obj_id:
+                    excluded_sns = registro_ps.Registro_ps.objects.exclude(pk=obj_id)\
+                                    .values_list('power_station__sn', flat=True)
+                    qs = qs.exclude(sn__in=excluded_sns)
+                field = super().formfield_for_foreignkey(db_field, request, queryset=qs, **kwargs)
+                # Aquí le decimos explícitamente que use 'sn' como llave:
+                field.to_field_name = 'sn'
+                return field
             return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
 
 
 @admin.register(garantia.Garantia, site=mi_admin_site)

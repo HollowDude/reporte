@@ -25,7 +25,8 @@ class Triciclo(models.Model):
     autorizado = models.BooleanField(default=False, help_text="El triciclo se autorizara solo por el encargado de ello")
     obser = models.TextField("Observaciones adicionales", help_text="Algunas observaciones sobre el triciclo que pueden ser modificadas a lo largo del tiempo")
     modelo = models.CharField("Modelo", max_length=255, choices=MODELOS ,help_text="Modelo del Triciclo")
-
+    vendido = models.BooleanField("Vendido", default=False, help_text="Cuando se realice una relacion de venta de triciclo se vera reflejado aqui")
+    fecha_v = models.DateField("Fecha de Venta", default=None, null=True, blank=True, help_text="Al marcarse como vendido un triciclo la fecha se actualiza")
 
     def __str__(self):
         return f"VIN: {self.vin} - Modelo: {self.modelo}"
@@ -43,4 +44,5 @@ class Triciclo(models.Model):
 def set_fecha_auth(sender, instance, **kwargs):
     if instance.autorizado and not instance.fecha_autorizado:
         instance.fecha_autorizado = date.today()
+
         

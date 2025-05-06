@@ -22,6 +22,10 @@ class Power_Station(models.Model):
     modelo = models.CharField("Modelo", max_length=255, default="Longi", help_text="Modelo por defecto de las Power_Stations")
     marca = models.CharField("Marca", default="Perro Rojo", help_text="Marca por defecto de las Power_Stations")
     dist = models.CharField("Ditribuidora/Tienda", max_length = 255)
+    vendido = models.BooleanField("Vendido", default=False, help_text="Cuando se realice una relacion de venta de power station se vera reflejado aqui")
+    fecha_v = models.DateField("Fecha de Venta", default=None, null=True, blank=True, help_text="Al marcarse como vendida una power station la fecha se actualiza")
+
+
 
     def __str__(self):
         return f"ID: {self.sn} Tipo: {self.tipo}"

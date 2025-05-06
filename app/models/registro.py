@@ -50,4 +50,8 @@ def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
         last_reporte = Registro.objects.order_by('-numero_reporte').first()
         instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
+    if instance.triciclo:
+        instance.triciclo.vendido = True
+        instance.triciclo.fecha_v = date.today()
+        instance.triciclo.save()
         
