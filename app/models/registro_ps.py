@@ -52,4 +52,8 @@ def set_numero_reporte(sender, instance, **kwargs):
     if not instance.numero_reporte:
         last_reporte = Registro_ps.objects.order_by('-numero_reporte').first()
         instance.numero_reporte = (last_reporte.numero_reporte + 1) if last_reporte else 1
+    if instance.power_station:
+        instance.power_station.vendido = True
+        instance.power_station.fecha_v = date.today()
+        instance.power_station.save()
         
