@@ -19,7 +19,7 @@ class Triciclo(models.Model):
     vin = models.CharField("Vin", max_length=255, primary_key=True)
     fecha_armado = models.DateField(default=datetime.now, help_text="Fecha en que se armo el triciclo")
     num_m = models.CharField("Numero de Motor", max_length = 255, blank=True)
-    sello = models.CharField(max_length=255, default="NONE", blank=True)
+    sello = models.CharField(max_length=255, blank=True)
     extensor_rango = models.CharField(max_length=255, blank=True)
     fecha_autorizado = models.DateField(blank = True, null = True, help_text="Aparecera automaticamente al autorizar el triciclo")
     autorizado = models.BooleanField(default=False, help_text="El triciclo se autorizara solo por el encargado de ello")
