@@ -11,9 +11,6 @@ class Triciclo(models.Model):
         ('triciclo eléctrico con panel solar hy', 'TRICICLO ELÉCTRICO CON PANEL SOLAR HY'),
         ('moto ry', 'MOTO RY'),
         ('cuatriciclo t90', 'CUATRICICLO T90'),
-        ('dsl pro,DSL PRO'),
-        ('jl,JL'),
-        ('ware frame, WARE FRAME')
     ]
 
 
