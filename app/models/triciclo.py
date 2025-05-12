@@ -6,9 +6,9 @@ from django.db.models.signals import pre_save
 
 class Triciclo(models.Model):
     MODELOS = [
-        ('triciclo con extensor de rango', 'TRICICLO CON EXTENSOR DE RANGO'),
-        ('triciclo eléctrico de carga', 'TRICICLO ELÉCTRICO DE CARGA'),
-        ('triciclo eléctrico con panel solar', 'TRICICLO ELÉCTRICO CON PANEL SOLAR'),
+        ('ty150uk', 'TY150UK'),
+        ('triciclo eléctrico de carga hk', 'TRICICLO ELÉCTRICO DE CARGA HK'),
+        ('triciclo eléctrico con panel solar hy', 'TRICICLO ELÉCTRICO CON PANEL SOLAR HY'),
         ('moto ry', 'MOTO RY'),
         ('cuatriciclo t90', 'CUATRICICLO T90'),
     ]
