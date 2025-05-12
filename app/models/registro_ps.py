@@ -11,7 +11,7 @@ from .empresa import Empresa
 class Registro_ps(models.Model):
     RECEPTOR_CHOICES = [
             ('pino.isaac27@gmail.com', 'Isaac'),
-            ('tallerjireh47@gmail.com', 'Mary'),
+            ('tallerjireh47@gmail.com', 'Abraham'),
         ]
 
     fecha_entregado = models.DateField("Fecha entregado",default = date.today())
