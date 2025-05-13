@@ -56,6 +56,21 @@ class RegistroForm(forms.ModelForm):
         model = registro.Registro
         fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 1) Base: solo triciclos no vendidos
+        qs = triciclo.Triciclo.objects.filter(vendido=False)
+
+        # 2) Si es edición, excluye los que ya estén usados en otro Registro
+        if self.instance and self.instance.pk:
+            usados = registro.Registro.objects.exclude(pk=self.instance.pk) \
+                        .filter(triciclo__isnull=False) \
+                        .values_list('triciclo__vin', flat=True)
+            qs = qs.exclude(vin__in=usados)
+
+        # 3) Asigna el queryset filtrado al campo
+        self.fields['triciclo'].queryset = qs
+
     def clean_receptor(self):
         data = self.cleaned_data['receptor']
         return ','.join(data)
@@ -78,6 +93,23 @@ class Registro_psForm(forms.ModelForm):
     class Meta:
         model = registro_ps.Registro_ps
         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 1) Base: solo power stations no vendidas
+        qs = power_station.Power_Station.objects.filter(vendido=False)
+
+        # 2) Si es edición, excluye las ya usadas en otro Registro_ps
+        if self.instance and self.instance.pk:
+            usados = registro_ps.Registro_ps.objects.exclude(pk=self.instance.pk) \
+                        .filter(power_station__isnull=False) \
+                        .values_list('power_station__sn', flat=True)
+            qs = qs.exclude(sn__in=usados)
+
+        # 3) Asigna
+        self.fields['power_station'].queryset = qs
+        # y si quieres que use el SN como llave:
+        self.fields['power_station'].to_field_name = 'sn'
 
     def clean_receptor(self):
         data = self.cleaned_data['receptor']
@@ -232,20 +264,22 @@ class RegistroAdmin(admin.ModelAdmin):
         return readonly_fields
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        obj_id = request.resolver_match.kwargs.get('object_id')
-        
         if db_field.name == "triciclo":
-            excluded_vins = (
-                registro.Registro.objects
-                    .exclude(pk=obj_id)
-                    .exclude(triciclo__vendido=True)
-                    .exclude(triciclo__isnull=True)
-                    .values_list('triciclo__vin', flat=True)
-                    .distinct() 
-            )
-            kwargs["queryset"] = triciclo.Triciclo.objects.exclude(vin__in=excluded_vins)
+            # Parte común: nunca muestres triciclos vendidos
+            qs = triciclo.Triciclo.objects.filter(vendido=False)
 
+            # Si estamos editando, además quitamos los ya asignados a otros registros
+            obj_id = request.resolver_match.kwargs.get('object_id')
+            if obj_id:
+                usados = registro.Registro.objects.exclude(pk=obj_id) \
+                    .filter(triciclo__isnull=False) \
+                    .values_list('triciclo__vin', flat=True)
+                qs = qs.exclude(vin__in=usados)
+
+            kwargs["queryset"] = qs
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
     
     @admin.register(registro_ps.Registro_ps, site=mi_admin_site)
     class Registro_psAdmin(admin.ModelAdmin):
@@ -274,21 +308,28 @@ class RegistroAdmin(admin.ModelAdmin):
             
             return readonly_fields
 
-        def formfield_for_foreignkey(self, db_field, request, **kwargs):
-            if db_field.name == "power_station":
-                qs = power_station.Power_Station.objects.filter(vendido=False)
-                obj_id = request.resolver_match.kwargs.get('object_id')
-                if obj_id:
-                    excluded_sns = registro_ps.Registro_ps.objects.exclude(pk=obj_id)\
-                                    .values_list('power_station__sn', flat=True)
-                    qs = qs.exclude(sn__in=excluded_sns)
-                field = super().formfield_for_foreignkey(db_field, request, queryset=qs, **kwargs)
-                # Aquí le decimos explícitamente que use 'sn' como llave:
-                field.to_field_name = 'sn'
-                return field
-            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+        
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "power_station":
+            # Parte común: nunca muestres power stations ya vendidas
+            qs = power_station.Power_Station.objects.filter(vendido=False)
 
+            obj_id = request.resolver_match.kwargs.get('object_id')
+            if obj_id:
+                # Excluimos las PS que ya estén vinculadas en registros distintos
+                usados = registro_ps.Registro_ps.objects.exclude(pk=obj_id) \
+                    .filter(power_station__isnull=False) \
+                    .values_list('power_station__sn', flat=True)
+                qs = qs.exclude(sn__in=usados)
 
+            # Si quieres que el field use `sn` para el to_field_name:
+            field = super().formfield_for_foreignkey(
+                db_field, request, queryset=qs, **kwargs
+            )
+            field.to_field_name = 'sn'
+            return field
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(garantia.Garantia, site=mi_admin_site)
