@@ -6,14 +6,14 @@ from django.db.models.signals import pre_save
 
 class Triciclo(models.Model):
     MODELOS = [
-        ('ty150uk', 'TY150UK'),
-        ('triciclo eléctrico de carga hk', 'TRICICLO ELÉCTRICO DE CARGA HK'),
-        ('triciclo eléctrico con panel solar hy', 'TRICICLO ELÉCTRICO CON PANEL SOLAR HY'),
-        ('moto ry', 'MOTO RY'),
-        ('cuatriciclo t90', 'CUATRICICLO T90'),
-        ('dsl pro', 'DSL PRO'),
-        ('jl', 'JL'),
-        ('ware frame', 'WARE FRAME')
+        ('TY150UK', 'TY150UK'),
+        ('triciclo eléctrico de carga HK', 'TRICICLO ELÉCTRICO DE CARGA HK'),
+        ('triciclo eléctrico con panel solar HY', 'TRICICLO ELÉCTRICO CON PANEL SOLAR HY'),
+        ('moto RY', 'MOTO RY'),
+        ('CUATRICICLO T90', 'CUATRICICLO T90'),
+        ('DSL PRO', 'DSL PRO'),
+        ('JL', 'JL'),
+        ('WARE FRAME', 'WARE FRAME')
     ]
 
 
