@@ -30,9 +30,9 @@ class Registro(models.Model):
 
     def __str__(self):
         if self.cliente:
-            return f"Relacion de venta: {self.numero_reporte} - {self.cliente}  -> {self.triciclo}"
+            return f"Venta: {self.numero_reporte} - {self.cliente}  -> {self.triciclo}"
         else:
-            return f"Relacion de venta: {self.numero_reporte} - {self.empresa}  -> {self.triciclo}"
+            return f"Venta: {self.numero_reporte} - {self.empresa}  -> {self.triciclo}"
 
     def save(self, *args, **kwargs):
 

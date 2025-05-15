@@ -32,7 +32,8 @@ class Triciclo(models.Model):
     fecha_v = models.DateField("Fecha de Venta", default=None, null=True, blank=True, help_text="Al marcarse como vendido un triciclo la fecha se actualiza")
 
     def __str__(self):
-        return f"VIN: {self.vin} - Modelo: {self.modelo}"
+        ult4 = self.vin[-4:] if self.vin else ""
+        return f"VIN: {ult4} - {self.modelo}"
 
     def clean(self):
         super().clean() 
