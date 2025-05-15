@@ -31,9 +31,9 @@ class Registro_ps(models.Model):
 
     def __str__(self):
         if self.cliente:
-            return f"Relacion de venta: {self.numero_reporte} - {self.cliente}  -> {self.power_station}"
+            return f"Venta: {self.numero_reporte} - {self.cliente}  -> {self.power_station}"
         else:
-            return f"Relacion de venta: {self.numero_reporte} - {self.empresa}  -> {self.power_station}"
+            return f"Venta: {self.numero_reporte} - {self.empresa}  -> {self.power_station}"
 
     def save(self, *args, **kwargs):
 
